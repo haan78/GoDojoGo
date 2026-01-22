@@ -1,0 +1,182 @@
+package data
+
+import (
+	lib "GoDojoGo/lib"
+	"errors"
+
+	"github.com/google/uuid"
+)
+
+type GetUserType struct {
+	UserId int64  `db:"user_id"`
+	Name   string `db:"name"`
+	EMail  string `db:"email"`
+	Role   string `db:"role"`
+}
+
+func GetUser(email string, pass string, admin bool) (*GetUserType, error) {
+	db, err := lib.DbConnect()
+	if err == nil {
+		rList, err := lib.GenericQuery[GetUserType](db, "SELECT user_id, name, email, role FROM user WHERE email = ? AND password = MD5(?) LIMIT 1", email, pass)
+		if err == nil {
+			if len(rList) > 0 {
+				if admin {
+					if rList[0].Role == "ADMIN" {
+						return &rList[0], nil
+					} else {
+						return nil, errors.New("User not found")
+					}
+				} else {
+					return &rList[0], nil
+				}
+			} else {
+				return nil, errors.New("User not found")
+			}
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
+
+type AddUserType struct {
+}
+
+type UserDetailType struct {
+	UserId       int64  `db:"user_id" json:"user_id"`
+	Name         string `db:"name" json:"name"`
+	BDate        string `db:"bdate" json:"bdate"`
+	Gender       string `db:"gender" json:"gender"`
+	Gsm          string `db:"gsm" json:"gsm"`
+	Email        string `db:"email" json:"email"`
+	Active       string `db:"active" json:"active"`
+	PatmentModel string `db:"payment_model" json:"payment_model"`
+}
+
+func CreateUser(ud *UserDetailType) (int64, error) {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		cmd := "INSERT INTO user (name, bdate, gender, gsm, email, active, payment_model) VALUES (:name, :bdate, :gender, :gsm, :email, :active, :payment_model)"
+		result, err := db.NamedExec(cmd, ud)
+		if err == nil {
+			liid, err := result.LastInsertId()
+			if err == nil {
+				return liid, nil
+			} else {
+				return 0, err
+			}
+		} else {
+			return 0, err
+		}
+	} else {
+		return 0, err
+	}
+}
+
+func UpdateUser(ud *UserDetailType) error {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		cmd := `UPDATE user 
+					SET name = :name, bdate = :bdate, gender = :gender, gsm = :gsm, email = :email, active = :active, payment_model = :payment_model
+						WHERE user_id = :user_id`
+		_, err := db.NamedExec(cmd, ud)
+		if err == nil {
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}
+
+func CreateOrUpdateUser(ud *UserDetailType) (int64, error) {
+	if ud.UserId == 0 {
+		return CreateUser(ud)
+	} else {
+		return ud.UserId, UpdateUser(ud)
+	}
+}
+
+func SetUserPassword(user_id int64, pass string) error {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		cmd := `UPDATE user SET "password" = ? WHERE user_id = ?`
+		_, err := db.Exec(cmd, pass, user_id)
+		return err
+	} else {
+		return err
+	}
+}
+
+func GenerateUserGuid(user_id int64) (string, error) {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		guid := uuid.New().String()
+		cmd := `INSERT INTO userguid (user_id, guid) VALUES (?, ?)`
+		_, err := db.Exec(cmd, user_id, guid)
+		return guid, err
+	} else {
+		return "", err
+	}
+}
+
+type UserDanSetType struct {
+	UserId   int64  `db:"user_id" json:"user_id"`
+	Dan      string `db:"dan" json:"dan"`
+	ExamDate string `db:"exam_date" json:"exam_date"`
+	Juri     string `db:"juri" json:"juri"`
+	Location string `db:"location" juri:"location"`
+}
+
+type UserDanDelType struct {
+	UserId int64  `db:"user_id" json:"user_id"`
+	Dan    string `db:"dan" json:"dan"`
+}
+
+func SetUserDan(uds *UserDanSetType) error {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		cmd := `INSERT INTO userdan (user_id, dan, exam_date, juri, location) 
+					VALUES (:user_id, :dan, :exam_date, :juri, :location)
+						ON DUPLICATE KEY UPDATE exam_date = :exam_date, juri = :juri, location = :location`
+		_, err := db.NamedExec(cmd, uds)
+		return err
+	} else {
+		return err
+	}
+}
+
+func DelUserDan(udd *UserDanDelType) error {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		cmd := `DELETE FROM userdan WHERE user_id = :user_id AND dan = :dan`
+		_, err := db.NamedExec(cmd, udd)
+		return err
+	} else {
+		return err
+	}
+}
+
+func GetUserDan(userId int64) ([]UserDanSetType, error) {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		cmd := `SELECT user_id, dan, exam_date, juri, location FROM userdan WHERE user_id = ?`
+		result, err := lib.GenericQuery[UserDanSetType](db, cmd, userId)
+		if err == nil {
+			return result, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}

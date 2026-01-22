@@ -1,0 +1,24 @@
+services:
+  mysql:
+    image: mysql:8.0.42
+    container_name: mysql8042
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: tv11k52
+      MYSQL_DATABASE: dodojogo
+      # optional:
+      # MYSQL_USER: appuser
+      # MYSQL_PASSWORD: apppass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # init scripts (runs only on first initialization of the data directory)
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
+    command:
+      # server defaults
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_turkish_ci"
+
+volumes:
+  mysql_data:
