@@ -1,10 +1,12 @@
 services:
   mysql:
     image: mysql:8.0.42
+    env_file:
+      - .env-docker
     container_name: mysql8042
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: tv11k52
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: dodojogo
       # optional:
       # MYSQL_USER: appuser

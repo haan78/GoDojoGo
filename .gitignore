@@ -1,3 +1,4 @@
 .env
+.env-docker
 removed
 __debug_bin*
