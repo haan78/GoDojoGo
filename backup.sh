@@ -1,3 +1,5 @@
-#!/bin/sh
+#!/usr/bin
 
-docker exec mysql8042 mysqldump -uroot --databases godojogo --routines --triggers --events --single-transaction --set-gtid-purged=OFF > mysql-init/01-schema.sql
+#run source .env.docker before
+cmd="mysqldump -uroot -p$MYSQL_ROOT_PASSWORD --databases godojogo --routines --triggers --events --single-transaction --set-gtid-purged=OFF"
+docker exec mysql8042 $cmd > mysql-init/01-schema.sql

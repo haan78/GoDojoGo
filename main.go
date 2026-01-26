@@ -27,9 +27,13 @@ func main() {
 	})
 
 	e.POST("/token", service.CreateTokenReq)
-	e.POST("/user/create", service.ServiceCreateUser)
-	e.POST("/user/photo/:userId", service.SaveUserPhoto)
-	e.GET("/user/photo/:userId", service.GetUserPhoto)
+
+	user := e.Group("/user", service.TokenAuthMiddleware)
+
+	user.POST("/create", service.ServiceCreateUser)
+	user.POST("/photo/:userId", service.SaveUserPhoto)
+	user.GET("/photo/:userId", service.GetUserPhoto)
+	user.GET("/dan/:userId", service.GetUserDanService)
 
 	if err := e.Start(":1323"); err != nil {
 		e.Logger.Error("failed to start server", "error", err)

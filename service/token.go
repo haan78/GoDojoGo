@@ -113,6 +113,22 @@ func TokenValidate(r *http.Request) (*CustomClaims, error) {
 	}
 }
 
+const ClaimsKey = "claims"
+
+func TokenAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c *echo.Context) error {
+		claims, err := TokenValidate(c.Request())
+		if err != nil {
+			// you can return your own structured error here if you want
+			return RaiseServiceError(http.StatusUnauthorized, "invalid or missing token")
+		}
+
+		// store claims for handlers to optionally use later
+		c.Set(ClaimsKey, claims)
+		return next(c)
+	}
+}
+
 func CreateTokenReq(c *echo.Context) error {
 	var req loginRequestType
 	if err := c.Bind(&req); err != nil {

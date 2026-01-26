@@ -41,28 +41,28 @@ func SaveUserPhoto(c *echo.Context) error {
 								if err == nil {
 									return nil
 								} else {
-									return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+									return RaiseServiceError(http.StatusInternalServerError, err.Error())
 								}
 							} else {
-								return echo.NewHTTPError(http.StatusBadRequest, "maximum photo size is 10Mb")
+								return RaiseServiceError(http.StatusBadRequest, "maximum photo size is 10Mb")
 							}
 						} else {
-							return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+							return RaiseServiceError(http.StatusBadRequest, err.Error())
 						}
 					} else {
-						return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+						return RaiseServiceError(http.StatusBadRequest, err.Error())
 					}
 				} else {
-					return echo.NewHTTPError(http.StatusBadRequest, "uploaded file must be an image")
+					return RaiseServiceError(http.StatusBadRequest, "uploaded file must be an image")
 				}
 			} else {
-				return echo.NewHTTPError(http.StatusBadRequest, "no file header")
+				return RaiseServiceError(http.StatusBadRequest, "no file header")
 			}
 		} else {
-			return echo.NewHTTPError(http.StatusBadRequest, `missing form file field "file"`)
+			return RaiseServiceError(http.StatusBadRequest, `missing form file field "file"`)
 		}
 	} else {
-		return echo.NewHTTPError(http.StatusBadRequest, "invalid userId")
+		return RaiseServiceError(http.StatusBadRequest, "invalid userId")
 	}
 }
 
@@ -71,14 +71,14 @@ func GetUserPhoto(c *echo.Context) error {
 	defer cancel()
 
 	userID, err := strconv.Atoi(c.Param("userId"))
-	if err == nil && userID > 0 {
+	if err == nil {
 		img, err := data.GetUserPhoto(ctx, int64(userID))
 		if err == nil {
 			ct := http.DetectContentType(img)
 			c.Blob(http.StatusOK, ct, img)
 			return nil
 		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			return RaiseServiceError(http.StatusInternalServerError, err.Error())
 		}
 	} else {
 		return err
