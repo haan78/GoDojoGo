@@ -1,8 +1,8 @@
 package lib
 
 import (
+	globals "GoDojoGo/deff"
 	"errors"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -15,7 +15,7 @@ func DbConnect() (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	dsn := os.Getenv("MYSQL_DSN")
+	dsn := globals.Settings.MYSQL_DSN
 	if dsn == "" {
 		return nil, errors.New("no connection string in .env file")
 	}

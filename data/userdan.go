@@ -7,7 +7,7 @@ type UserDanSetType struct {
 	Dan      string `db:"dan" json:"dan"`
 	ExamDate string `db:"exam_date" json:"exam_date"`
 	Juri     string `db:"juri" json:"juri"`
-	Location string `db:"location" juri:"location"`
+	Location string `db:"location" json:"location"`
 }
 
 type UserDanDelType struct {
