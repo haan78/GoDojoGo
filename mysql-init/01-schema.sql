@@ -38,6 +38,11 @@ CREATE TABLE `activity` (
   `text` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `active` enum('YES','NO') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'YES',
+  `start_time` time DEFAULT NULL,
+  `stop_time` time DEFAULT NULL,
+  `single_fee` decimal(12,2) DEFAULT '0.00',
+  `worker_fee` decimal(12,2) DEFAULT '0.00',
+  `student_fee` decimal(12,2) DEFAULT '0.00',
   PRIMARY KEY (`activity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -49,31 +54,6 @@ CREATE TABLE `activity` (
 LOCK TABLES `activity` WRITE;
 /*!40000 ALTER TABLE `activity` DISABLE KEYS */;
 /*!40000 ALTER TABLE `activity` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `activitypayment`
---
-
-DROP TABLE IF EXISTS `activitypayment`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activitypayment` (
-  `activitypayment_id` int unsigned NOT NULL AUTO_INCREMENT,
-  `payment_model` enum('MONTHLS','SINGLE','STUDENT') COLLATE utf8mb4_turkish_ci NOT NULL,
-  `activity_id` int unsigned NOT NULL,
-  `fee` decimal(12,2) NOT NULL,
-  PRIMARY KEY (`activitypayment_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `activitypayment`
---
-
-LOCK TABLES `activitypayment` WRITE;
-/*!40000 ALTER TABLE `activitypayment` DISABLE KEYS */;
-/*!40000 ALTER TABLE `activitypayment` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -122,7 +102,7 @@ CREATE TABLE `user` (
   `payment_model` enum('MONTHLY','SINGLE','STUDENT') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_index_1` (`email` DESC)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -145,10 +125,12 @@ DROP TABLE IF EXISTS `useractivity`;
 CREATE TABLE `useractivity` (
   `useractivity_id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
-  `activity_id` int unsigned NOT NULL,
-  `date` date NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `fee` decimal(12,2) NOT NULL,
+  `payment` decimal(12,2) DEFAULT NULL,
+  `date` date DEFAULT NULL,
+  `time` time DEFAULT NULL,
+  `activity` varchar(255) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   PRIMARY KEY (`useractivity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -187,6 +169,7 @@ CREATE TABLE `userdan` (
 
 LOCK TABLES `userdan` WRITE;
 /*!40000 ALTER TABLE `userdan` DISABLE KEYS */;
+INSERT INTO `userdan` VALUES ('1 Dan','2025-01-15','Istanbul','Sensei Tanaka','2026-01-26 10:58:42',NULL,18);
 /*!40000 ALTER TABLE `userdan` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -248,6 +231,25 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'godojogo'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `create_activity` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_unicode_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'IGNORE_SPACE,ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `create_activity`()
+BEGIN
+    select 1 as result;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -258,4 +260,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-26  7:22:06
+-- Dump completed on 2026-01-27 10:41:52
