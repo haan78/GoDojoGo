@@ -2,6 +2,7 @@ package lib
 
 import (
 	globals "GoDojoGo/deff"
+	"database/sql"
 	"errors"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -42,6 +43,40 @@ func GetValue(db *sqlx.DB, query string, args ...any) (any, error) {
 	}
 
 	return value, nil
+}
+
+func GetString(db *sqlx.DB, query string, args ...any) (string, error) {
+	v, err := GetValue(db, query, args...)
+	if err == nil {
+		if vs, ok := v.(sql.NullString); ok {
+			if vs.Valid {
+				return vs.String, nil
+			} else {
+				return "", errors.New("null value")
+			}
+		} else {
+			return "", errors.New("type is not string")
+		}
+	} else {
+		return "", err
+	}
+}
+
+func GetFloat(db *sqlx.DB, query string, args ...any) (float64, error) {
+	v, err := GetValue(db, query, args...)
+	if err == nil {
+		if vs, ok := v.(sql.NullFloat64); ok {
+			if vs.Valid {
+				return vs.Float64, nil
+			} else {
+				return 0, errors.New("null value")
+			}
+		} else {
+			return 0, errors.New("type is not float")
+		}
+	} else {
+		return 0, err
+	}
 }
 
 func GenericQuery[T any](db *sqlx.DB, query string, args ...any) ([]T, error) {
