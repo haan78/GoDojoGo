@@ -12,7 +12,7 @@ services:
       # MYSQL_USER: appuser
       # MYSQL_PASSWORD: apppass
     ports:
-      - "3306:3306"
+      - ${MYSQL_PORT}:3306
     volumes:
       - mysql_data:/var/lib/mysql
       # init scripts (runs only on first initialization of the data directory)
