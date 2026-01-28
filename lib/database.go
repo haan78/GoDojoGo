@@ -79,6 +79,23 @@ func GetFloat(db *sqlx.DB, query string, args ...any) (float64, error) {
 	}
 }
 
+func GetInt(db *sqlx.DB, query string, args ...any) (int64, error) {
+	v, err := GetValue(db, query, args...)
+	if err == nil {
+		if vs, ok := v.(sql.NullInt64); ok {
+			if vs.Valid {
+				return vs.Int64, nil
+			} else {
+				return 0, errors.New("null value")
+			}
+		} else {
+			return 0, errors.New("type is not float")
+		}
+	} else {
+		return 0, err
+	}
+}
+
 func GenericQuery[T any](db *sqlx.DB, query string, args ...any) ([]T, error) {
 	var result []T
 	if err := db.Select(&result, query, args...); err != nil {

@@ -12,17 +12,17 @@ type feeType struct {
 }
 
 type AddUserActivityType struct {
-	UserId   int64           `db:"user_id" json:"user_id"`
-	Activity string          `db:"activity" json:"activity"`
-	Fee      float64         `db:"fee" json:"fee"`
-	Payment  sql.NullFloat64 `db:"payment" json:"payment"`
-	Date     sql.NullString  `db:"date" json:"date"`
-	Time     sql.NullString  `db:"time" json:"time"`
+	UserId     int64           `db:"user_id" json:"user_id"`
+	ActivityId int64           `db:"activity_id" json:"activity_id"`
+	Fee        float64         `db:"fee" json:"fee"`
+	Payment    sql.NullFloat64 `db:"payment" json:"payment"`
+	Date       sql.NullString  `db:"date" json:"date"`
+	Time       sql.NullString  `db:"time" json:"time"`
 }
 
 type GetUserActivitiesType struct {
 	UserActivityId int64           `db:"useractivity_id" json:"useractivity_id"`
-	Activity       string          `db:"activity" json:"activity"`
+	ActivityId     int64           `db:"activity_id" json:"activity_id"`
 	Fee            float64         `db:"fee" json:"fee"`
 	Payment        sql.NullFloat64 `db:"payment" json:"payment"`
 	Date           sql.NullString  `db:"date" json:"date"`
@@ -37,7 +37,7 @@ type UserActivityPaymentType struct {
 func AddUserActivity(d *AddUserActivityType) (int64, error) {
 	db, err := lib.DbConnect()
 	if err == nil {
-		result, err := db.NamedExec(`INSERT INTO useractivity (user_id, activity, fee, payment, "date", "time") VALUES (:user_id, :activity, :fee, :payment, :date, :time)`, d)
+		result, err := db.NamedExec(`INSERT INTO useractivity (user_id, activity_id, fee, payment, "date", "time") VALUES (:user_id, :activity_id, :fee, :payment, :date, :time)`, d)
 		if err == nil {
 			id, err := result.LastInsertId()
 			if err == nil {
@@ -68,12 +68,13 @@ func GetUserActivities(userId int64) ([]GetUserActivitiesType, error) {
 	if err == nil {
 		cmd := `SELECT
 					ua.useractivity_id, 
-					ua.activity, 
+					a.name AS activity, 
 					ua.fee, 
 					ua.payment, 
 					ua.date, 
 					ua.time 
 						FROM useractivity ua 
+						INNER JOIN activity a ON a.activity_id = ua.activity_id
 							WHERE ua.user_id = ? 
 								ORDER BY ua.date DESC, ua.time ASC`
 		result, err := lib.GenericQuery[GetUserActivitiesType](db, cmd, userId)

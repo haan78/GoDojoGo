@@ -7,25 +7,49 @@ import (
 )
 
 type ActivityBaseType struct {
-	ActivityId   int64           `db:"activity_id" json:"activity_id"`
-	Name         string          `db:"name" json:"name"`
-	ActivityDate sql.NullString  `db:"activity_date" json:"activity_date"`
-	Fee          sql.NullFloat64 `db:"fee" json:"fee"`
-	Text         sql.NullString  `db:"text" json:"text"`
+	ActivityId int64          `db:"activity_id" json:"activity_id"`
+	Name       string         `db:"name" json:"name"`
+	Date       sql.NullString `db:"date" json:"date"`
+	Start      sql.NullString `db:"start" json:"start"`
+	End        sql.NullString `db:"end" json:"end"`
+	SingleFee  float64        `db:"single_fee" json:"single_fee"`
+	WorkerFee  float64        `db:"worker_fee" json:"worker_fee"`
+	StudentFee float64        `db:"student_fee" json:"student_fee"`
+	Text       sql.NullString `db:"text" json:"text"`
+	Repetitive string         `db:"repetitive" json:"repetitive"`
+	Active     string         `db:"active" json:"active"`
 }
 
-func CreateActivty(a *ActivityBaseType) (int64, error) {
+func SetActivty(a *ActivityBaseType) (int64, error) {
+
+	if a.Date.Valid && a.Repetitive == "YES" {
+		return 0, errors.New("repetitive activity can't have date")
+	}
+
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := `INSERT INTO activity (name, activity_date, fee, text) VALUES (:name, :activity_date, :fee, :text)`
+		var cmd string
+		if a.ActivityId == 0 {
+			cmd = `INSERT INTO activity (name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active) 
+					VALUES (:name, :date, :start, :end, :single_fee, :worker_fee, :student_fee,  :text, :repetitive, :active)`
+		} else {
+			cmd = `UPDATE activity SET 
+				name = :name, date = :date, start = :start, end = :end, text = :text, active = :active
+					WHERE activity_id = :activity_id`
+		}
+
 		result, err := db.NamedExec(cmd, a)
 		if err == nil {
-			liid, err := result.LastInsertId()
-			if err == nil {
-				return liid, nil
+			if a.ActivityId == 0 {
+				liid, err := result.LastInsertId()
+				if err == nil {
+					return liid, nil
+				} else {
+					return 0, err
+				}
 			} else {
-				return 0, err
+				return a.ActivityId, nil
 			}
 		} else {
 			return 0, err
@@ -35,40 +59,23 @@ func CreateActivty(a *ActivityBaseType) (int64, error) {
 	}
 }
 
-func UpdateActivty(a *ActivityBaseType) error {
-	db, err := lib.DbConnect()
-	if err == nil {
-		defer db.Close()
-		cmd := `SELECT activity_date FROM activity WHERE activity_id = ?`
-		ad, err := lib.GetValue(db, cmd, a.ActivityId)
-		if err == nil {
-			if ns, ok := ad.(sql.NullString); ok {
-				if ns.Valid == a.ActivityDate.Valid {
-					cmd = `UPDATE activity SET name = :name, activity_date = :activity_date, fee = :fee, text = :text 
-							WHERE activity_id = :activity_id`
-					_, err := db.NamedExec(cmd, a)
-					return err
-				} else {
-					return errors.New("activity date type can't change")
-				}
-			} else {
-				return err
-			}
-		} else {
-			return err
-		}
-	} else {
-		return err
-	}
-}
-
 func DelActivty(activityId int64) error {
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := `DELETE FROM activity WHERE activity_id = ? AND deletable = 'YES'`
-		_, err := db.Exec(cmd, activityId)
-		return err
+
+		count, err := lib.GetInt(db, "SELECT COUNT(1) FROM useractivity WHERE payment IS NOT NULL AND activity_id = ?", activityId)
+		if err != nil {
+			if count == 0 {
+				cmd := `DELETE FROM activity WHERE activity_id = ? AND deletable = 'YES'`
+				_, err := db.Exec(cmd, activityId)
+				return err
+			} else {
+				return errors.New("some user made paymemt this activity")
+			}
+		} else {
+			return err
+		}
 	} else {
 		return err
 	}
