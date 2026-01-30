@@ -38,11 +38,12 @@ CREATE TABLE `activity` (
   `text` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `active` enum('YES','NO') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'YES',
-  `start_time` time DEFAULT NULL,
-  `stop_time` time DEFAULT NULL,
-  `single_fee` decimal(12,2) DEFAULT '0.00',
-  `worker_fee` decimal(12,2) DEFAULT '0.00',
-  `student_fee` decimal(12,2) DEFAULT '0.00',
+  `start` time DEFAULT NULL,
+  `end` time DEFAULT NULL,
+  `single_fee` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `worker_fee` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `student_fee` decimal(12,2) NOT NULL DEFAULT '0.00',
+  `repetitive` enum('YES','NO') COLLATE utf8mb4_turkish_ci NOT NULL,
   PRIMARY KEY (`activity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -78,6 +79,34 @@ LOCK TABLES `dan` WRITE;
 /*!40000 ALTER TABLE `dan` DISABLE KEYS */;
 INSERT INTO `dan` VALUES ('1 DAN',10),('1 KYU',7),('2 DAN',20),('2 KYU',6),('3 DAN',40),('3 KYU',5),('4 DAN',70),('4 KYU',4),('5 DAN',110),('5 KYU',3),('6 DAN',160),('6 KYU',2),('7 KYU',1);
 /*!40000 ALTER TABLE `dan` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `emailpool`
+--
+
+DROP TABLE IF EXISTS `emailpool`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `emailpool` (
+  `emailpool_id` int NOT NULL AUTO_INCREMENT COMMENT 'Primary Key',
+  `email` varchar(255) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `sent` enum('YES','NO') COLLATE utf8mb4_turkish_ci DEFAULT 'NO',
+  `create_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `template_id` tinyint DEFAULT NULL,
+  `params` json DEFAULT NULL,
+  PRIMARY KEY (`emailpool_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `emailpool`
+--
+
+LOCK TABLES `emailpool` WRITE;
+/*!40000 ALTER TABLE `emailpool` DISABLE KEYS */;
+/*!40000 ALTER TABLE `emailpool` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -130,7 +159,7 @@ CREATE TABLE `useractivity` (
   `payment` decimal(12,2) DEFAULT NULL,
   `date` date DEFAULT NULL,
   `time` time DEFAULT NULL,
-  `activity` varchar(255) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `activity_id` int unsigned NOT NULL,
   PRIMARY KEY (`useractivity_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -260,4 +289,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-27 10:41:52
+-- Dump completed on 2026-01-29  6:51:22

@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	if err := globals.LoadSettings(); err != nil {
+	if err := globals.LoadSettings(".env"); err != nil {
 		panic(err.Error())
 	}
 

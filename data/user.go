@@ -1,7 +1,9 @@
 package data
 
 import (
+	g "GoDojoGo/deff"
 	lib "GoDojoGo/lib"
+	"encoding/json"
 	"errors"
 
 	"github.com/google/uuid"
@@ -54,21 +56,47 @@ type UserDetailType struct {
 	PatmentModel string `db:"payment_model" json:"payment_model"`
 }
 
+type emailParamType struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
 func CreateUser(ud *UserDetailType) (int64, error) {
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := "INSERT INTO user (name, bdate, gender, gsm, email, active, payment_model) VALUES (:name, :bdate, :gender, :gsm, :email, :active, :payment_model)"
-		result, err := db.NamedExec(cmd, ud)
+
+		tx, err := db.Beginx()
 		if err == nil {
-			liid, err := result.LastInsertId()
+			cmd := "INSERT INTO user (name, bdate, gender, gsm, email, active, payment_model) VALUES (:name, :bdate, :gender, :gsm, :email, :active, :payment_model)"
+			result, err := tx.NamedExec(cmd, ud)
 			if err == nil {
-				return liid, nil
+				liid, err := result.LastInsertId()
+				if err == nil {
+					barr, err := json.Marshal(&emailParamType{Name: ud.Name, Url: g.Settings.EMAIL_ACTIVATE_URL})
+					if err == nil {
+						cmd := `INSERT INTO emailpool (email, kind, params) VALUES (?, 'ACTIVATE', ?)`
+						_, err := tx.Exec(cmd, ud.Email, string(barr))
+						if err == nil {
+							tx.Commit()
+							return liid, nil
+						} else {
+							tx.Rollback()
+							return 0, err
+						}
+					} else {
+						tx.Rollback()
+						return 0, err
+					}
+				} else {
+					tx.Rollback()
+					return 0, err
+				}
 			} else {
 				return 0, err
 			}
 		} else {
-			return 0, err
+			return 0, nil
 		}
 	} else {
 		return 0, err

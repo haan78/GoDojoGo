@@ -1,0 +1,95 @@
+package main
+
+import (
+	"GoDojoGo/Cron/data"
+	"GoDojoGo/Cron/deff"
+	"GoDojoGo/Cron/lib"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+type SendMailType struct {
+	EmailPoolId int64  `db:"emailpool_id" json:"emailpool_id"`
+	Kind        string `db:"kind" json:"kind"`
+	Email       string `db:"email" json:"email"`
+	Success     bool   `db:"success" json:"success"`
+	Message     string `db:"mseesage" json:"message"`
+}
+
+func SendMails(list []data.UnsendEmailType) []SendMailType {
+
+	anError := func(d *data.UnsendEmailType, s string) SendMailType {
+		return SendMailType{
+			EmailPoolId: d.EmailPoolId,
+			Success:     false,
+			Message:     s,
+			Kind:        d.Kind,
+			Email:       d.Email,
+		}
+	}
+
+	var result []SendMailType
+	for _, email := range list {
+		var tid int = 0
+		if email.Kind == "ACTIVATE" {
+			tid = 1
+		} else if email.Kind == "INFORM" {
+			tid = 5
+		}
+		if tid > 0 {
+			err := lib.SendinblueTemplateEmail(deff.Settings.BREVO_API_KEY, email.Email, 1, email.GetParams())
+			if err == nil {
+				result = append(result, SendMailType{
+					EmailPoolId: email.EmailPoolId,
+					Success:     true,
+					Message:     "Mail successfuly sent",
+					Kind:        email.Kind,
+					Email:       email.Email,
+				})
+			} else {
+				result = append(result, anError(&email, err.Error()))
+			}
+		} else {
+			result = append(result, anError(&email, "kind is unknown"))
+		}
+		time.Sleep(5 * time.Second)
+
+	}
+	return result
+}
+
+func main() {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	parent := filepath.Dir(wd)
+	envPath := filepath.Join(parent, ".env")
+	err = deff.LoadSettings(envPath)
+	if err == nil {
+		list, err := data.GetUnsentEmails()
+		if err == nil {
+			rList := SendMails(list)
+			var ct, ce, cs int = 0, 0, 0
+			for _, r := range rList {
+				if r.Success {
+					fmt.Printf("Success email = %s, kind = %s \n", r.Email, r.Kind)
+					cs += 1
+				} else {
+					fmt.Printf("Error email = %s, kind = %s, message = %s \n", r.Email, r.Kind, r.Message)
+					ce += 1
+				}
+				ct += 1
+			}
+			fmt.Printf("Total %d Success %d Error %d\n", ct, cs, ce)
+		} else {
+			panic(err)
+		}
+	} else {
+		panic(err)
+	}
+
+}
