@@ -33,9 +33,10 @@ func SendMails(list []data.UnsendEmailType) []SendMailType {
 	var result []SendMailType
 	for _, email := range list {
 		var tid int = 0
-		if email.Kind == "ACTIVATE" {
+		switch email.Kind {
+		case "ACTIVATE":
 			tid = 1
-		} else if email.Kind == "INFORM" {
+		case "INFORM":
 			tid = 5
 		}
 		if tid > 0 {
@@ -91,5 +92,4 @@ func main() {
 	} else {
 		panic(err)
 	}
-
 }
