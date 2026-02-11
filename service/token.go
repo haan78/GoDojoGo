@@ -166,7 +166,7 @@ func CreateTokenReq(c *echo.Context) error {
 	user, err := data.GetUser(req.User, req.Password, false)
 
 	if err != nil {
-		return RaiseServiceError(http.StatusBadRequest, "wrong credential")
+		return RaiseServiceError(http.StatusBadRequest, "wrong credential: "+err.Error())
 	}
 
 	tokenString, err := generateToken(user)

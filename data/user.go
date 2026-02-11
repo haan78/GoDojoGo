@@ -4,7 +4,7 @@ import (
 	g "GoDojoGo/deff"
 	lib "GoDojoGo/lib"
 	"encoding/json"
-	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -17,6 +17,7 @@ type GetUserType struct {
 }
 
 func GetUser(email string, pass string, admin bool) (*GetUserType, error) {
+	//time.Sleep(6 * time.Second) // 2 saniye duraklatır
 	db, err := lib.DbConnect()
 	if err == nil {
 		rList, err := lib.GenericQuery[GetUserType](db, "SELECT user_id, name, email, role FROM user WHERE email = ? AND password = MD5(?) LIMIT 1", email, pass)
@@ -26,13 +27,13 @@ func GetUser(email string, pass string, admin bool) (*GetUserType, error) {
 					if rList[0].Role == "ADMIN" {
 						return &rList[0], nil
 					} else {
-						return nil, errors.New("User not found")
+						return nil, fmt.Errorf("user not found (%v:%v)", email, pass)
 					}
 				} else {
 					return &rList[0], nil
 				}
 			} else {
-				return nil, errors.New("User not found")
+				return nil, fmt.Errorf("user not found (%v:%v)", email, pass)
 			}
 		} else {
 			return nil, err
@@ -133,7 +134,7 @@ func SetUserPassword(user_id int64, pass string) error {
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := `UPDATE user SET "password" = ? WHERE user_id = ?`
+		cmd := `UPDATE user SET "password" = MD5(?) WHERE user_id = ?`
 		_, err := db.Exec(cmd, pass, user_id)
 		return err
 	} else {
