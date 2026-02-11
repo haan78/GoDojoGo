@@ -94,8 +94,8 @@ CREATE TABLE `emailpool` (
   `sent` enum('YES','NO') COLLATE utf8mb4_turkish_ci DEFAULT 'NO',
   `create_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  `template_id` tinyint DEFAULT NULL,
-  `params` json DEFAULT NULL,
+  `params` json NOT NULL,
+  `kind` enum('ACTIVATE','INFORM') COLLATE utf8mb4_turkish_ci NOT NULL,
   PRIMARY KEY (`emailpool_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -128,10 +128,10 @@ CREATE TABLE `user` (
   `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `email` varchar(255) COLLATE utf8mb4_turkish_ci NOT NULL,
   `active` enum('YES','NO') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'YES',
-  `payment_model` enum('MONTHLY','SINGLE','STUDENT') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `payment_model` enum('MONTHLY','SINGLE','STUDENT','WORKER','FREE') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_index_1` (`email` DESC)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,7 +140,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (18,'+905321234567','Ali Barış Öztürk','MALE','1990-05-12','ADMIN',NULL,'2026-01-22 07:11:02',NULL,'alibarisozturk@gmail.com','YES','MONTHLY');
+INSERT INTO `user` VALUES (18,'+905321234567','Ali Barış Öztürk','MALE','1990-05-12','ADMIN','21232f297a57a5a743894a0e4a801fc3','2026-01-22 07:11:02','2026-02-11 08:16:06','alibarisozturk@gmail.com','YES','WORKER'),(26,'905321000001','Ahmet Yılmaz','MALE','1990-05-12','ADMIN','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','ahmet.yilmaz1@example.com','YES','WORKER'),(27,'905321000002','Ayşe Demir','FEMALE','1992-08-21','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','ayse.demir2@example.com','YES','SINGLE'),(28,'905321000003','Mehmet Kaya','MALE','1988-03-15','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','mehmet.kaya3@example.com','NO','STUDENT'),(29,'905321000004','Fatma Çelik','FEMALE','1995-11-30','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','fatma.celik4@example.com','YES','WORKER'),(30,'905321000005','Ali Can','MALE','1985-01-09','ADMIN','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','ali.can5@example.com','YES','SINGLE'),(31,'905321000006','Zeynep Şahin','FEMALE','1993-07-18','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','zeynep.sahin6@example.com','YES','STUDENT'),(32,'905321000007','Burak Aydın','MALE','1991-12-02','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','burak.aydin7@example.com','NO','WORKER'),(33,'905321000008','Elif Koç','FEMALE','1996-04-25','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','elif.koc8@example.com','YES','SINGLE'),(34,'905321000009','Emre Arslan','MALE','1989-09-14','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','emre.arslan9@example.com','YES','WORKER'),(35,'905321000010','Merve Kurt','FEMALE','1994-02-10','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','merve.kurt10@example.com','YES','STUDENT'),(36,'905321000011','Caner Özkan','MALE','1987-06-19','ADMIN','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','caner.ozkan11@example.com','YES','WORKER'),(37,'905321000012','Selin Yıldız','FEMALE','1998-10-05','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','selin.yildiz12@example.com','NO','SINGLE'),(38,'905321000013','Oğuzhan Güneş','MALE','1990-01-27','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','oguzhan.gunes13@example.com','YES','STUDENT'),(39,'905321000014','Buse Karaca','FEMALE','1997-03-11','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','buse.karaca14@example.com','YES','WORKER'),(40,'905321000015','Hakan Polat','MALE','1986-12-22','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','hakan.polat15@example.com','YES','SINGLE'),(41,'905321000016','Ece Taş','FEMALE','1999-05-08','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','ece.tas16@example.com','YES','STUDENT'),(42,'905321000017','Tolga Erdem','MALE','1993-08-17','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','tolga.erdem17@example.com','NO','WORKER'),(43,'905321000018','Gizem Aksoy','FEMALE','1991-11-03','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','gizem.aksoy18@example.com','YES','SINGLE'),(44,'905321000019','Kerem Tunç','MALE','1984-07-29','ADMIN','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','kerem.tunc19@example.com','YES','WORKER'),(45,'905321000020','Derya Öztürk','FEMALE','1992-09-09','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','derya.ozturk20@example.com','YES','STUDENT'),(46,'905321000021','Serkan Kılıç','MALE','1988-04-04','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','serkan.kilic21@example.com','YES','WORKER'),(47,'905321000022','Melis Şen','FEMALE','1996-06-30','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','melis.sen22@example.com','NO','SINGLE'),(48,'905321000023','Murat Yalçın','MALE','1985-10-13','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','murat.yalcin23@example.com','YES','STUDENT'),(49,'905321000024','İrem Acar','FEMALE','1997-01-16','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:16:06','irem.acar24@example.com','YES','WORKER'),(50,'905321000025','Kaan Çetin','MALE','1990-12-01','USER','32250170a0dca92d53ec9624f336ca24','2026-02-11 08:05:08','2026-02-11 08:10:49','kaan.cetin25@example.com','YES','SINGLE');
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -289,4 +289,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-29  6:51:22
+-- Dump completed on 2026-02-11 13:33:37
