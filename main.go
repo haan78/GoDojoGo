@@ -31,6 +31,7 @@ func main() {
 	user := e.Group("/user", service.GetSecLevel(0))
 
 	user.POST("/create", service.ServiceCreateUser)
+	user.GET("/all", service.ServiceUserAll)
 
 	user.POST("/photo/:userId", service.SaveUserPhoto)
 	user.GET("/photo/:userId", service.GetUserPhoto)

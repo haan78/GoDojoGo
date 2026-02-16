@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type SendMailType struct {
@@ -18,7 +20,7 @@ type SendMailType struct {
 	Message     string `db:"mseesage" json:"message"`
 }
 
-func SendMails(list []data.UnsendEmailType) []SendMailType {
+func SendMails(db *sqlx.DB, list []data.UnsendEmailType) []SendMailType {
 
 	anError := func(d *data.UnsendEmailType, s string) SendMailType {
 		return SendMailType{
@@ -31,6 +33,7 @@ func SendMails(list []data.UnsendEmailType) []SendMailType {
 	}
 
 	var result []SendMailType
+
 	for _, email := range list {
 		var tid int = 0
 		switch email.Kind {
@@ -40,17 +43,47 @@ func SendMails(list []data.UnsendEmailType) []SendMailType {
 			tid = 5
 		}
 		if tid > 0 {
-			err := lib.SendinblueTemplateEmail(deff.Settings.BREVO_API_KEY, email.Email, 1, email.GetParams())
+			tx, err := db.Beginx()
 			if err == nil {
+				err := data.SetEmailAsSent(tx, email.EmailPoolId)
+				if err == nil {
+					err := lib.SendinblueTemplateEmail(deff.Settings.BREVO_API_KEY, email.Email, 1, email.GetParams())
+					if err == nil {
+						tx.Commit()
+						result = append(result, SendMailType{
+							EmailPoolId: email.EmailPoolId,
+							Success:     true,
+							Message:     "Mail successfuly sent",
+							Kind:        email.Kind,
+							Email:       email.Email,
+						})
+					} else {
+						tx.Rollback()
+						result = append(result, SendMailType{
+							EmailPoolId: email.EmailPoolId,
+							Success:     false,
+							Message:     err.Error(),
+							Kind:        email.Kind,
+							Email:       email.Email,
+						})
+					}
+				} else {
+					result = append(result, SendMailType{
+						EmailPoolId: email.EmailPoolId,
+						Success:     false,
+						Message:     err.Error(),
+						Kind:        email.Kind,
+						Email:       email.Email,
+					})
+				}
+			} else {
 				result = append(result, SendMailType{
 					EmailPoolId: email.EmailPoolId,
-					Success:     true,
-					Message:     "Mail successfuly sent",
+					Success:     false,
+					Message:     err.Error(),
 					Kind:        email.Kind,
 					Email:       email.Email,
 				})
-			} else {
-				result = append(result, anError(&email, err.Error()))
 			}
 		} else {
 			result = append(result, anError(&email, "kind is unknown"))
@@ -70,26 +103,36 @@ func main() {
 	parent := filepath.Dir(wd)
 	envPath := filepath.Join(parent, ".env")
 	err = deff.LoadSettings(envPath)
+
+	MYSQL_DSN := os.Getenv("MYSQL_DSN")
+
+	db, err := lib.DbConnect(MYSQL_DSN)
 	if err == nil {
-		list, err := data.GetUnsentEmails()
+		defer db.Close()
+		list, err := data.GetUnsentEmails(db)
 		if err == nil {
-			rList := SendMails(list)
-			var ct, ce, cs int = 0, 0, 0
-			for _, r := range rList {
-				if r.Success {
-					fmt.Printf("Success email = %s, kind = %s \n", r.Email, r.Kind)
-					cs += 1
-				} else {
-					fmt.Printf("Error email = %s, kind = %s, message = %s \n", r.Email, r.Kind, r.Message)
-					ce += 1
+			if err == nil {
+				rList := SendMails(db, list)
+				var ct, ce, cs int = 0, 0, 0
+				for _, r := range rList {
+					if r.Success {
+						fmt.Printf("Success email = %s, kind = %s \n", r.Email, r.Kind)
+						cs += 1
+					} else {
+						fmt.Printf("Error email = %s, kind = %s, message = %s \n", r.Email, r.Kind, r.Message)
+						ce += 1
+					}
+					ct += 1
 				}
-				ct += 1
+				fmt.Printf("Total %d Success %d Error %d\n", ct, cs, ce)
+			} else {
+				panic(err)
 			}
-			fmt.Printf("Total %d Success %d Error %d\n", ct, cs, ce)
 		} else {
 			panic(err)
 		}
 	} else {
 		panic(err)
 	}
+
 }

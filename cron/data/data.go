@@ -5,6 +5,8 @@ import (
 	"GoDojoGo/Cron/lib"
 	"database/sql"
 	"encoding/json"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type UnsendEmailType struct {
@@ -28,22 +30,17 @@ func (use *UnsendEmailType) GetParams() any {
 	}
 }
 
-func GetUnsentEmails() ([]UnsendEmailType, error) {
-	db, err := lib.DbConnect(deff.Settings.MYSQL_DSN)
+func GetUnsentEmails(db *sqlx.DB) ([]UnsendEmailType, error) {
+	result, err := lib.GenericQuery[UnsendEmailType](db, "SELECT emailpool_id, email, params, kind FROM emailpool WHERE sent = 'NO' ORDER BY create_at ASC LIMIT 10")
 	if err == nil {
-		defer db.Close()
-		result, err := lib.GenericQuery[UnsendEmailType](db, "SELECT emailpool_id, email, params, kind FROM emailpool WHERE sent = 'NO' ORDER BY create_at ASC LIMIT 10")
-		if err == nil {
-			return result, nil
-		} else {
-			return nil, err
-		}
+		return result, nil
 	} else {
 		return nil, err
 	}
+
 }
 
-func SetEmailAsSent(emailpool_id int64) error {
+func SetEmailAsSent(tx *sqlx.Tx, emailpool_id int64) error {
 	db, err := lib.DbConnect(deff.Settings.MYSQL_DSN)
 	if err == nil {
 		defer db.Close()

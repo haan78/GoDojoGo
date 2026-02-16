@@ -154,3 +154,18 @@ func GenerateUserGuid(user_id int64) (string, error) {
 		return "", err
 	}
 }
+
+func UserAll() ([]UserDetailType, error) {
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		list, err := lib.GenericQuery[UserDetailType](db, `SELECT user_id, name, bdate, gender, gsm, email, active, payment_model  fROM user`)
+		if err == nil {
+			return list, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
