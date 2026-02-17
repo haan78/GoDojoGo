@@ -111,28 +111,23 @@ func main() {
 		defer db.Close()
 		list, err := data.GetUnsentEmails(db)
 		if err == nil {
-			if err == nil {
-				rList := SendMails(db, list)
-				var ct, ce, cs int = 0, 0, 0
-				for _, r := range rList {
-					if r.Success {
-						fmt.Printf("Success email = %s, kind = %s \n", r.Email, r.Kind)
-						cs += 1
-					} else {
-						fmt.Printf("Error email = %s, kind = %s, message = %s \n", r.Email, r.Kind, r.Message)
-						ce += 1
-					}
-					ct += 1
+			rList := SendMails(db, list)
+			var ct, ce, cs int = 0, 0, 0
+			for _, r := range rList {
+				if r.Success {
+					fmt.Printf("Success email = %s, kind = %s \n", r.Email, r.Kind)
+					cs += 1
+				} else {
+					fmt.Printf("Error email = %s, kind = %s, message = %s \n", r.Email, r.Kind, r.Message)
+					ce += 1
 				}
-				fmt.Printf("Total %d Success %d Error %d\n", ct, cs, ce)
-			} else {
-				panic(err)
+				ct += 1
 			}
+			fmt.Printf("Total %d Success %d Error %d\n", ct, cs, ce)
 		} else {
 			panic(err)
 		}
 	} else {
 		panic(err)
 	}
-
 }

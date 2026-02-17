@@ -31,3 +31,8 @@ func TestBrevoService(c *echo.Context) error {
 		return err
 	}
 }
+
+func TestJustText(c *echo.Context) error {
+	c.JSON(200, "I am alive!")
+	return nil
+}

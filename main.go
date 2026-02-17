@@ -12,9 +12,7 @@ import (
 
 func main() {
 
-	if err := globals.LoadSettings(".env"); err != nil {
-		panic(err.Error())
-	}
+	globals.LoadSettings(".env")
 
 	e := echo.New()
 
@@ -23,12 +21,12 @@ func main() {
 	e.Use(middleware.RequestLogger())
 
 	e.GET("/", func(c *echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.String(http.StatusOK, "GO Dojo Go "+globals.VERSION)
 	})
 
 	e.POST("/token", service.CreateTokenReq)
 
-	user := e.Group("/user", service.GetSecLevel(0))
+	user := e.Group("/user", service.GetSecLevel(1))
 
 	user.POST("/create", service.ServiceCreateUser)
 	user.GET("/all", service.ServiceUserAll)
@@ -46,7 +44,7 @@ func main() {
 	user.POST("/activity/pay", service.UserActivityPaymentService)
 
 	test := e.Group("/test", service.GetSecLevel(0))
-	test.POST("/brevo", service.TestBrevoService)
+	test.GET("/alive", service.TestJustText)
 
 	if err := e.Start(":" + fmt.Sprint(globals.Settings.PORT)); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
