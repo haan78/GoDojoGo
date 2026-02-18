@@ -97,7 +97,7 @@ CREATE TABLE `emailpool` (
   `params` json NOT NULL,
   `kind` enum('ACTIVATE','INFORM') COLLATE utf8mb4_turkish_ci NOT NULL,
   PRIMARY KEY (`emailpool_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -106,7 +106,32 @@ CREATE TABLE `emailpool` (
 
 LOCK TABLES `emailpool` WRITE;
 /*!40000 ALTER TABLE `emailpool` DISABLE KEYS */;
+INSERT INTO `emailpool` VALUES (1,'alibarisozturk@gmail.com','YES','2026-02-16 11:11:19','2026-02-16 11:40:57','{\"url\": \"https://ankarakendo.com\", \"name\": \"Ali Barış Öztürk\"}','ACTIVATE');
 /*!40000 ALTER TABLE `emailpool` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `paymentmodel`
+--
+
+DROP TABLE IF EXISTS `paymentmodel`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `paymentmodel` (
+  `model_name` varchar(100) COLLATE utf8mb4_turkish_ci NOT NULL,
+  `charge` decimal(12,2) NOT NULL,
+  PRIMARY KEY (`model_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `paymentmodel`
+--
+
+LOCK TABLES `paymentmodel` WRITE;
+/*!40000 ALTER TABLE `paymentmodel` DISABLE KEYS */;
+INSERT INTO `paymentmodel` VALUES ('FREE',0.00),('SINGLE',200.00),('STUDENT',1200.00),('WORKER',1500.00);
+/*!40000 ALTER TABLE `paymentmodel` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -128,7 +153,7 @@ CREATE TABLE `user` (
   `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `email` varchar(255) COLLATE utf8mb4_turkish_ci NOT NULL,
   `active` enum('YES','NO') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'YES',
-  `payment_model` enum('MONTHLY','SINGLE','STUDENT','WORKER','FREE') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `payment_model` enum('SINGLE','STUDENT','WORKER','FREE') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_index_1` (`email` DESC)
 ) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
@@ -289,4 +314,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-11 13:33:37
+-- Dump completed on 2026-02-18 14:26:21
