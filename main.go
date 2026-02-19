@@ -43,6 +43,10 @@ func main() {
 	user.POST("/activity/del", service.DelUserActivityService)
 	user.POST("/activity/pay", service.UserActivityPaymentService)
 
+	payment := e.Group("/payment", service.GetSecLevel(1))
+	payment.GET("/all", service.PaymentModelGetAllService)
+	payment.POST("/all", service.PaymentModelSetAllService)
+
 	test := e.Group("/test", service.GetSecLevel(0))
 	test.GET("/alive", service.TestJustText)
 

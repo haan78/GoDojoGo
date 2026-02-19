@@ -15,3 +15,14 @@ func PaymentModelGetAllService(c *echo.Context) error {
 		return err
 	}
 }
+
+func PaymentModelSetAllService(c *echo.Context) error {
+	var req []data.PatmentModelType
+	err := c.Bind(&req)
+	if err == nil {
+		err := data.PaymentSetAll(req)
+		return err
+	} else {
+		return err
+	}
+}
