@@ -6,7 +6,6 @@ import (
 	"GoDojoGo/Cron/lib"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -95,14 +94,8 @@ func SendMails(db *sqlx.DB, list []data.UnsendEmailType) []SendMailType {
 }
 
 func main() {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
 
-	parent := filepath.Dir(wd)
-	envPath := filepath.Join(parent, ".env")
-	err = deff.LoadSettings(envPath)
+	deff.LoadSettings(".env")
 
 	MYSQL_DSN := os.Getenv("MYSQL_DSN")
 

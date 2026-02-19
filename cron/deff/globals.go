@@ -1,12 +1,13 @@
 package deff
 
 import (
-	"errors"
 	"os"
 	"strconv"
 
 	"github.com/joho/godotenv"
 )
+
+const VERSION = "1.0.0+1"
 
 type SettingsType struct {
 	PORT               int
@@ -18,29 +19,27 @@ type SettingsType struct {
 
 var Settings SettingsType
 
-func LoadSettings(path string) error {
-	err := godotenv.Load(path)
+func LoadSettings(path string) {
+
+	_, err := os.Stat(path)
 	if err == nil {
-		if Settings.JWT_SECRET = os.Getenv("JWT_SECRET"); Settings.JWT_SECRET == "" {
-			return errors.New("JWT_SECRET not found in .env file")
-		}
-
-		if Settings.MYSQL_DSN = os.Getenv("MYSQL_DSN"); Settings.MYSQL_DSN == "" {
-			return errors.New("MYSQL_DSN not found in .env file")
-		}
-
-		num, err := strconv.Atoi(os.Getenv("PORT"))
+		err := godotenv.Load(path)
 		if err != nil {
-			return err
-		} else {
-			Settings.PORT = num
+			panic(err)
 		}
+	}
 
-		Settings.BREVO_API_KEY = os.Getenv("BREVO_API_KEY")
-
-		return nil
-
+	Settings.JWT_SECRET = os.Getenv("JWT_SECRET")
+	Settings.MYSQL_DSN = os.Getenv("MYSQL_DSN")
+	Settings.BREVO_API_KEY = os.Getenv("BREVO_API_KEY")
+	if os.Getenv("PORT") != "" {
+		num, err := strconv.Atoi(os.Getenv("PORT"))
+		if err == nil {
+			Settings.PORT = num
+		} else {
+			panic(err)
+		}
 	} else {
-		return err
+		Settings.PORT = 1323
 	}
 }
