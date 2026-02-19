@@ -3,3 +3,4 @@
 removed
 __debug_bin*
 cron/.env
+cron/Cron
