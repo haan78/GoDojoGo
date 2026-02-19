@@ -97,9 +97,20 @@ func main() {
 
 	deff.LoadSettings(".env")
 
-	MYSQL_DSN := os.Getenv("MYSQL_DSN")
+	args := os.Args[1:]
+	if len(args) > 0 {
+		if args[0] == "check" {
+			_, err := lib.SendinblueCheck(deff.Settings.BREVO_API_KEY)
+			if err == nil {
+				fmt.Println("Seems all ok!")
+			} else {
+				panic(err)
+			}
+		}
+		return
+	}
 
-	db, err := lib.DbConnect(MYSQL_DSN)
+	db, err := lib.DbConnect(deff.Settings.MYSQL_DSN)
 	if err == nil {
 		defer db.Close()
 		list, err := data.GetUnsentEmails(db)

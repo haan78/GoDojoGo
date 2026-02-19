@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -73,4 +74,72 @@ func SendinblueTemplateEmail(apiKey string, email string, templateID int, params
 	}
 
 	return nil
+}
+
+type PlanVertical struct {
+	PlanCategory string `json:"planCategory"`
+	PlanType     string `json:"planType"`
+	Name         string `json:"name"`
+	Status       string `json:"status"`
+	StartDate    string `json:"startDate"`
+	EndDate      string `json:"endDate"`
+}
+type AccountResponse struct {
+	PlanVerticals []PlanVertical `json:"planVerticals"`
+}
+
+func SendinblueCheck(apiKey string) ([]PlanVertical, error) {
+	var result []PlanVertical
+	if apiKey == "" {
+		return result, fmt.Errorf("api key is empty")
+	}
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		"https://api.sendinblue.com/v3/account",
+		nil,
+	)
+	if err != nil {
+		return result, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("api-key", apiKey)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return result, fmt.Errorf("brevo request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return result, fmt.Errorf("brevo unhealthy, status code: %d", resp.StatusCode)
+	}
+
+	var account AccountResponse
+	if err := json.NewDecoder(resp.Body).Decode(&account); err != nil {
+		return result, fmt.Errorf("failed to decode brevo response: %w", err)
+	}
+
+	// Check if any planVertical is active
+	for _, plan := range account.PlanVerticals {
+		if plan.Status == "active" {
+			result = append(result, plan)
+		}
+	}
+
+	if len(result) > 0 {
+		return result, nil
+	} else {
+		return account.PlanVerticals, fmt.Errorf("brevo account has no active plan")
+	}
+
 }

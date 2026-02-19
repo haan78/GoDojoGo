@@ -2,3 +2,4 @@
 .env.docker
 removed
 __debug_bin*
+cron/.env
