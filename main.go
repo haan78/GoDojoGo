@@ -1,10 +1,12 @@
 package main
 
 import (
+	"GoDojoGo/deff"
 	globals "GoDojoGo/deff"
 	service "GoDojoGo/service"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -13,6 +15,14 @@ import (
 func main() {
 
 	globals.LoadSettings(".env")
+
+	args := os.Args[1:]
+	if len(args) > 0 {
+		if args[0] == "version" {
+			fmt.Println(deff.VERSION)
+		}
+		return
+	}
 
 	e := echo.New()
 
@@ -42,6 +52,8 @@ func main() {
 	user.POST("/activity/add", service.AddUserActivityService)
 	user.POST("/activity/del", service.DelUserActivityService)
 	user.POST("/activity/pay", service.UserActivityPaymentService)
+
+	user.POST("/password", service.ChangeUserPasswordService)
 
 	payment := e.Group("/payment", service.GetSecLevel(1))
 	payment.GET("/all", service.PaymentModelGetAllService)

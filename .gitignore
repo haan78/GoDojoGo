@@ -1,6 +1,8 @@
 .env
 .env.docker
+.env.server
 removed
 __debug_bin*
 cron/.env
 cron/Cron
+output

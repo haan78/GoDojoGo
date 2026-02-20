@@ -27,13 +27,13 @@ func GetUser(email string, pass string, admin bool) (*GetUserType, error) {
 					if rList[0].Role == "ADMIN" {
 						return &rList[0], nil
 					} else {
-						return nil, fmt.Errorf("user not found (%v:%v)", email, pass)
+						return nil, fmt.Errorf("user not found (%v)", email)
 					}
 				} else {
 					return &rList[0], nil
 				}
 			} else {
-				return nil, fmt.Errorf("user not found (%v:%v)", email, pass)
+				return nil, fmt.Errorf("user not found (%v)", email)
 			}
 		} else {
 			return nil, err
@@ -137,6 +137,29 @@ func SetUserPassword(user_id int64, pass string) error {
 		cmd := `UPDATE user SET "password" = MD5(?) WHERE user_id = ?`
 		_, err := db.Exec(cmd, pass, user_id)
 		return err
+	} else {
+		return err
+	}
+}
+
+func ChangeUserPassword(email, oldp, newp string) error {
+	db, err := lib.DbConnect()
+	if err == nil {
+		result, err := db.Exec(`UPDATE user SET password = MD5(?) WHERE email = ? AND password = MD5(?) LIMIT 1`, newp, email, oldp)
+		if err == nil {
+			arc, err := result.RowsAffected()
+			if err == nil {
+				if arc == 1 {
+					return nil
+				} else {
+					return fmt.Errorf("Member not found")
+				}
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
 	} else {
 		return err
 	}
