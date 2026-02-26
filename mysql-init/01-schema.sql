@@ -82,35 +82,6 @@ INSERT INTO `dan` VALUES ('1 DAN',10),('1 KYU',7),('2 DAN',20),('2 KYU',6),('3 D
 UNLOCK TABLES;
 
 --
--- Table structure for table `emailpool`
---
-
-DROP TABLE IF EXISTS `emailpool`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `emailpool` (
-  `emailpool_id` int NOT NULL AUTO_INCREMENT COMMENT 'Primary Key',
-  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL,
-  `sent` enum('YES','NO') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci DEFAULT 'NO',
-  `create_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `update_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  `params` json NOT NULL,
-  `kind` enum('ACTIVATE','INFORM') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL,
-  PRIMARY KEY (`emailpool_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `emailpool`
---
-
-LOCK TABLES `emailpool` WRITE;
-/*!40000 ALTER TABLE `emailpool` DISABLE KEYS */;
-INSERT INTO `emailpool` VALUES (1,'alibarisozturk@gmail.com','YES','2026-02-16 11:11:19','2026-02-16 11:40:57','{\"url\": \"https://ankarakendo.com\", \"name\": \"Ali Barış Öztürk\"}','ACTIVATE');
-/*!40000 ALTER TABLE `emailpool` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `paymentmodel`
 --
 
@@ -237,9 +208,14 @@ DROP TABLE IF EXISTS `userguid`;
 CREATE TABLE `userguid` (
   `user_id` int unsigned NOT NULL,
   `guid` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL,
-  `used` enum('YES','NO') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL DEFAULT 'NO',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_id`)
+  `code` char(6) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `expire_time` datetime DEFAULT NULL,
+  `kind` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  `params` json DEFAULT NULL,
+  `status` enum('PENDING','SENT','VERIFIED','DEAD') CHARACTER SET utf8mb4 COLLATE utf8mb4_turkish_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_turkish_ci DEFAULT NULL,
+  UNIQUE KEY `userguid_guid_UNI` (`guid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -314,4 +290,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-23  8:08:19
+-- Dump completed on 2026-02-26  8:27:47

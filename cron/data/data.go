@@ -37,7 +37,6 @@ func GetUnsentEmails(db *sqlx.DB) ([]UnsendEmailType, error) {
 	} else {
 		return nil, err
 	}
-
 }
 
 func SetEmailAsSent(tx *sqlx.Tx, emailpool_id int64) error {

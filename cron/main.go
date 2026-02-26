@@ -38,15 +38,15 @@ func SendMails(db *sqlx.DB, list []data.UnsendEmailType) []SendMailType {
 		switch email.Kind {
 		case "ACTIVATE":
 			tid = 1
-		case "INFORM":
-			tid = 5
+		case "PASSWORD":
+			tid = 6
 		}
 		if tid > 0 {
 			tx, err := db.Beginx()
 			if err == nil {
 				err := data.SetEmailAsSent(tx, email.EmailPoolId)
 				if err == nil {
-					err := lib.SendinblueTemplateEmail(deff.Settings.BREVO_API_KEY, email.Email, 1, email.GetParams())
+					err := lib.SendinblueTemplateEmail(deff.Settings.BREVO_API_KEY, email.Email, tid, email.GetParams())
 					if err == nil {
 						tx.Commit()
 						result = append(result, SendMailType{

@@ -1,12 +1,13 @@
 package data
 
 import (
-	g "GoDojoGo/deff"
 	lib "GoDojoGo/lib"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type GetUserType struct {
@@ -57,12 +58,8 @@ type UserDetailType struct {
 	PatmentModel string `db:"payment_model" json:"payment_model"`
 }
 
-type emailParamType struct {
-	Name string `json:"name"`
-	Url  string `json:"url"`
-}
-
 func CreateUser(ud *UserDetailType) (int64, error) {
+
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
@@ -72,23 +69,10 @@ func CreateUser(ud *UserDetailType) (int64, error) {
 			cmd := "INSERT INTO user (name, bdate, gender, gsm, email, active, payment_model) VALUES (:name, :bdate, :gender, :gsm, :email, :active, :payment_model)"
 			result, err := tx.NamedExec(cmd, ud)
 			if err == nil {
-				liid, err := result.LastInsertId()
+				user_id, err := result.LastInsertId()
 				if err == nil {
-					barr, err := json.Marshal(&emailParamType{Name: ud.Name, Url: g.Settings.EMAIL_ACTIVATE_URL})
-					if err == nil {
-						cmd := `INSERT INTO emailpool (email, kind, params) VALUES (?, 'ACTIVATE', ?)`
-						_, err := tx.Exec(cmd, ud.Email, string(barr))
-						if err == nil {
-							tx.Commit()
-							return liid, nil
-						} else {
-							tx.Rollback()
-							return 0, err
-						}
-					} else {
-						tx.Rollback()
-						return 0, err
-					}
+					_, err := guidAndEmail(tx, ud.Name, ud.Email, "ACTIVATE", "", user_id)
+					return user_id, err
 				} else {
 					tx.Rollback()
 					return 0, err
@@ -165,16 +149,107 @@ func ChangeUserPassword(email, oldp, newp string) error {
 	}
 }
 
-func GenerateUserGuid(user_id int64) (string, error) {
+func guidAndEmail(tx *sqlx.Tx, name, email, kind, pass string, user_id int64) (string, error) {
+
+	type emailParmaType struct {
+		Name string `json:"name"`
+		Code string `json:"code"`
+		Guid string `json:"guid"`
+	}
+
+	sql1 := `SELECT COUNT(*) FROM userguid WHERE user_id = ? AND kind = ? AND status <> 'VERIFIED' AND expire_time > NOW()`
+	sql2 := `INSERT INTO userguid (user_id, guid, code, kind, email, params, expire_time, status) VALUES (?, ?, ?, ?, ADDTIME(NOW(),'01:00:00'),'WAITING')`
+	if pass != "" {
+		sql2 = `INSERT INTO userguid (user_id, guid, code, kind, email, params, password, expire_time, status) VALUES (?, ?, ?, ?, MD5(?), ADDTIME(NOW(),'01:00:00'),'WAITING')`
+	}
+
+	code, err := lib.GenerateRandomCode()
+	if err == nil {
+		guid := uuid.New().String() + "-" + fmt.Sprint(user_id)
+		jdata, err := json.Marshal(&emailParmaType{Name: name, Code: code, Guid: guid})
+		result, err := tx.Query(sql1, user_id, kind)
+		if err == nil {
+			var c int64
+			err := result.Scan(&c)
+			if err == nil {
+				if c == 0 {
+					_, err := tx.Exec(sql2, user_id, guid, code, kind, email, string(jdata))
+					return guid, err
+				} else {
+					return "", fmt.Errorf("there is a waiting proccess")
+				}
+			} else {
+				return "", err
+			}
+		} else {
+			return "", err
+		}
+	} else {
+		return "", err
+	}
+
+}
+
+func GenerateUserGuidForForgotPass(email, new_pass string) (string, error) {
+
+	type userInfo struct {
+		Name   string `db:"name"`
+		UserId int64  `db:"user_id"`
+	}
+
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		guid := uuid.New().String()
-		cmd := `INSERT INTO userguid (user_id, guid) VALUES (?, ?)`
-		_, err := db.Exec(cmd, user_id, guid)
-		return guid, err
+		users, err := lib.GenericQuery[userInfo](db, "SELECT name, user_id FROM user WHERE email = ?", email)
+		if err == nil {
+			if len(users) == 1 {
+				tx, err := db.Beginx()
+				if err == nil {
+					guid, err := guidAndEmail(tx, users[0].Name, email, "PASSWORD", new_pass, users[0].UserId)
+					if err == nil {
+						return guid, tx.Commit()
+					} else {
+						tx.Rollback()
+						return "", err
+					}
+				} else {
+					return "", err
+				}
+			} else {
+				return "", fmt.Errorf("member not found")
+			}
+		} else {
+			return "", err
+		}
 	} else {
 		return "", err
+	}
+}
+
+func SetNewPasswordByGuid(guid string) error {
+
+	type IdAndPassType struct {
+		UserId   int64          `db:"user_id"`
+		Password sql.NullString `db:"password"`
+	}
+
+	db, err := lib.DbConnect()
+	if err == nil {
+		defer db.Close()
+		qData, err := lib.GenericQuery[IdAndPassType](db, "SELECT user_id, password FROM userguid WHERE guid = ? AND expire_time > NOW()", guid)
+		if err == nil {
+			if len(qData) == 1 {
+				_, err := db.Exec("UPDATE user SET password = ? WHERE user_id = ?", qData[0].Password, qData[0].UserId)
+				return err
+			} else {
+				return fmt.Errorf("guid not found")
+			}
+		} else {
+			return err
+		}
+
+	} else {
+		return err
 	}
 }
 

@@ -2,6 +2,7 @@ package lib
 
 import (
 	globals "GoDojoGo/deff"
+	"context"
 	"database/sql"
 	"errors"
 
@@ -11,6 +12,30 @@ import (
 )
 
 func DbConnect() (*sqlx.DB, error) {
+	// Load .env (optional in production)
+	if err := godotenv.Load(); err != nil {
+		return nil, err
+	}
+
+	dsn := globals.Settings.MYSQL_DSN
+	if dsn == "" {
+		return nil, errors.New("no connection string in .env file")
+	}
+
+	db, err := sqlx.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify connection
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+func DbConnectX(ctx context.Context) (*sqlx.DB, error) {
 	// Load .env (optional in production)
 	if err := godotenv.Load(); err != nil {
 		return nil, err

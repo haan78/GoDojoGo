@@ -18,9 +18,9 @@ mkdir -p ./output
 
 echo "==> Building..."
 go build -C ./ -o ./output/GoDojoGo
-go build -C ./cron  -o ../output/Cron
 
-if [[ ! -e "./output/GoDojoGo" || ! -e "./output/Cron" ]]; then
+
+if [[ ! -e "./output/GoDojoGo" ]]; then
   echo "Compile failed!"
   exit 1
 fi
@@ -41,7 +41,7 @@ echo "==> Uploading binaries to $REMOTE_DIR ..."
 $SCP ./output/GoDojoGo ./output/Cron "$HOST:$REMOTE_DIR/"
 
 echo "==> Setting permissions..."
-eval "$SSH \"chmod +x '$REMOTE_DIR/GoDojoGo' '$REMOTE_DIR/Cron'\""
+eval "$SSH \"chmod +x '$REMOTE_DIR/GoDojoGo'\""
 
 echo "==> Starting service..."
 eval "$SSH \"systemctl start $SERVICE\""
