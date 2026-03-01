@@ -170,16 +170,24 @@ func guidAndEmail(tx *sqlx.Tx, name, email, kind, pass string, user_id int64) (s
 		result, err := tx.Query(sql1, user_id, kind)
 		if err == nil {
 			var c int64
-			err := result.Scan(&c)
-			if err == nil {
-				if c == 0 {
-					_, err := tx.Exec(sql2, user_id, guid, code, kind, email, string(jdata))
-					return guid, err
+			if result.Next() {
+				err := result.Scan(&c)
+				if err == nil {
+					if c == 0 {
+						_, err := tx.Exec(sql2, user_id, guid, code, kind, email, string(jdata))
+						if err == nil {
+							return guid, nil
+						} else {
+							return "", fmt.Errorf("err x")
+						}
+					} else {
+						return "", fmt.Errorf("there is a waiting proccess")
+					}
 				} else {
-					return "", fmt.Errorf("there is a waiting proccess")
+					return "", err
 				}
 			} else {
-				return "", err
+				return "", fmt.Errorf("no record")
 			}
 		} else {
 			return "", err

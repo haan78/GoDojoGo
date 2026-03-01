@@ -43,7 +43,7 @@ func (use *GetUnsentEmailListType) GetTempId() int {
 
 func GetEmailList(db *sqlx.DB, status string, limit int) ([]GetUnsentEmailListType, error) {
 	var list []GetUnsentEmailListType
-	err := db.Select(&list, "SELECT user_id, guid, email, params, kind, password FROM userguid WHERE expire_time > NOW() status = ? ORDER BY expire_time DESC LIMIT ?", status, limit)
+	err := db.Select(&list, "SELECT user_id, guid, email, params, kind, password FROM userguid WHERE expire_time > NOW() AND status = ? ORDER BY expire_time DESC LIMIT ?", status, limit)
 	if err == nil {
 		return list, nil
 	} else {
