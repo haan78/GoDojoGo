@@ -4,14 +4,26 @@ import (
 	globals "GoDojoGo/deff"
 	service "GoDojoGo/service"
 	"html/template"
+	"io"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 )
 
+type Template struct {
+	t *template.Template
+}
+
+// Echo v5 Renderer interface
+func (r *Template) Render(c *echo.Context, w io.Writer, name string, data any) error {
+	return r.t.ExecuteTemplate(w, name, data)
+}
+
 func InitService() *echo.Echo {
 	e := echo.New()
+
+	e.Static("/static", "static")
 
 	// Initialize and register the renderer
 	e.Renderer = &Template{
@@ -52,8 +64,8 @@ func InitService() *echo.Echo {
 	payment.POST("/all", service.PaymentModelSetAllService)
 
 	forgot := e.Group("/forgot", service.GetSecLevel(0))
-	forgot.POST("/", service.UserForgotPasswordService)
-	forgot.GET("/:guid", service.UserForgotPasswordSetService)
+	forgot.POST("/", service.ForgotPasswordService)
+	forgot.GET("/:guid", service.ForgotPasswordSetService)
 
 	test := e.Group("/test", service.GetSecLevel(0))
 	test.GET("/alive", service.TestJustText)

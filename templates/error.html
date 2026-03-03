@@ -3,16 +3,15 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Updated</title>
+    <title>Error</title>
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
     <main class="panel">
       <img class="logo" src="/static/logo.svg" alt="GoDojoGo logo">
-      <h1>Password Updated</h1>
-      <p class="message">Your password has been changed successfully.</p>
-      <p class="message">You may close this page now.</p>
-      <p class="status success">Completed</p>
+      <h1>Action Could Not Be Completed</h1>
+      <p class="message">An error occurred: {{.Message}}</p>
+      <p class="status error">Request Failed</p>
     </main>
   </body>
 </html>

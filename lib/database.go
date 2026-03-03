@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -140,4 +141,15 @@ func GenericRow[T any](db *sqlx.DB, query string, args ...any) (T, error) {
 	} else {
 		return empty, errors.New("no record found")
 	}
+}
+
+func EmptyIsNull(str string) sql.NullString {
+	var value sql.NullString
+
+	if strings.Trim(str, " ") == "" {
+		value.Scan(nil)
+	} else {
+		value.Scan(str)
+	}
+	return value
 }

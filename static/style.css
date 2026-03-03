@@ -1,0 +1,90 @@
+:root {
+  --bg: #000000;
+  --fg: rgb(185, 150, 34);
+  --fg-soft: rgba(185, 150, 34, 0.78);
+  --surface: rgba(17, 17, 17, 0.92);
+  --border: rgba(185, 150, 34, 0.38);
+  --shadow: rgba(185, 150, 34, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(185, 150, 34, 0.12), transparent 36%),
+    radial-gradient(circle at 80% 88%, rgba(185, 150, 34, 0.09), transparent 32%),
+    linear-gradient(145deg, #040404 0%, #0b0b0b 45%, #000000 100%);
+  color: var(--fg);
+  font-family: "Segoe UI", "Trebuchet MS", "Gill Sans", sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.panel {
+  width: min(620px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 24px 50px -25px var(--shadow);
+  backdrop-filter: blur(2px);
+  padding: 30px 26px;
+  text-align: center;
+}
+
+.logo {
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+  margin-bottom: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.45rem, 2.8vw, 2rem);
+  letter-spacing: 0.6px;
+}
+
+.message {
+  margin: 14px 0 0;
+  font-size: 1.05rem;
+  color: var(--fg-soft);
+  line-height: 1.55;
+}
+
+.status {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.82rem;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.status.error {
+  background: rgba(130, 36, 22, 0.35);
+}
+
+.status.success {
+  background: rgba(20, 78, 35, 0.33);
+}
+
+@media (max-width: 560px) {
+  body {
+    padding: 16px;
+  }
+
+  .panel {
+    padding: 24px 18px;
+  }
+}

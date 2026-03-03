@@ -40,6 +40,7 @@ echo "==> Uploading binaries to $REMOTE_DIR ..."
 # Upload both binaries
 $SCP ./output/GoDojoGo "$HOST:$REMOTE_DIR/"
 $SCP -r ./templates "$HOST:$REMOTE_DIR/"
+$SCP -r ./static "$HOST:$REMOTE_DIR/"
 
 echo "==> Setting permissions..."
 eval "$SSH \"chmod +x '$REMOTE_DIR/GoDojoGo'\""
