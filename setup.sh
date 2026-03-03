@@ -4,6 +4,7 @@ set -euo pipefail
 set -a
 source .env.server
 set +a
+{ sleep 0.5; echo "$KEYPASS"; } | script -q /dev/null -c "ssh-add $SERVERKEY"
 
 HOST="root@$SERVERADDR"
 REMOTE_DIR="/opt/GoDojoGo"
