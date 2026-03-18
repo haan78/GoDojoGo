@@ -10,8 +10,8 @@ HOST="root@$SERVERADDR"
 REMOTE_DIR="/opt/GoDojoGo"
 SERVICE="dojo"
 
-SSH="ssh -o BatchMode=yes -o ConnectTimeout=10 -i \"$SERVERKEY\" $HOST"
-SCP="scp -o BatchMode=yes -o ConnectTimeout=10 -i \"$SERVERKEY\""
+SSH="ssh -o BatchMode=yes -o ConnectTimeout=10 -i $SERVERKEY $HOST"
+SCP="scp -o BatchMode=yes -o ConnectTimeout=10 -i $SERVERKEY"
 
 echo "==> Cleaning output..."
 rm -rf ./output/*
