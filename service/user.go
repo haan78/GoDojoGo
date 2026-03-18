@@ -7,11 +7,23 @@ import (
 )
 
 func ServiceCreateUser(c *echo.Context) error {
+
+	type ServiceCreateUserResponse struct {
+		UserId int64 `json:"user_id"`
+	}
+
 	var req data.UserDetailType
 	err := c.Bind(&req)
 	if err == nil {
-		_, err := data.CreateOrUpdateUser(&req)
-		return err
+		uid, err := data.CreateOrUpdateUser(&req)
+		if err == nil {
+			var res ServiceCreateUserResponse
+			res.UserId = uid
+			c.JSON(200, res)
+			return nil
+		} else {
+			return err
+		}
 	} else {
 		return err
 	}
