@@ -57,6 +57,7 @@ func SetActivity(a *ActivityBaseType) (int64, error) {
 }
 
 func DelActivity(activityId int64) error {
+
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
@@ -78,12 +79,17 @@ func DelActivity(activityId int64) error {
 	}
 }
 
-func GetActivity() ([]ActivityBaseType, error) {
+func GetActivity(start, end string) ([]ActivityBaseType, error) {
+
+	if !lib.IsValidDate(start) || !lib.IsValidDate(end) {
+		return nil, fmt.Errorf("start and end must be date format YYYY-MM-DD")
+	}
+
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := `SELECT name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active FROM activity WHERE activity_date >= CURDATE()`
-		result, err := lib.GenericQuery[ActivityBaseType](db, cmd)
+		cmd := `SELECT name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active FROM activity WHERE activity_date BETWEEN ? AND ?`
+		result, err := lib.GenericQuery[ActivityBaseType](db, cmd, start, end)
 		if err == nil {
 			return result, nil
 		} else {

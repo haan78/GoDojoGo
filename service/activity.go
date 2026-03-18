@@ -39,7 +39,9 @@ func DelActivityService(c *echo.Context) error {
 }
 
 func GetActivityService(c *echo.Context) error {
-	list, err := data.GetActivity()
+	start := c.Param("start")
+	end := c.Param("end")
+	list, err := data.GetActivity(start, end)
 	if err == nil {
 		c.JSON(200, list)
 		return nil
