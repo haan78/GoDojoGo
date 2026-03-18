@@ -68,7 +68,7 @@ func InitService() *echo.Echo {
 	forgot.GET("/:guid", service.ForgotPasswordSetService)
 
 	activity := e.Group("/activity", service.GetSecLevel(1))
-	activity.GET("/get", service.GetActivityService)
+	activity.GET("/get/:start/:end", service.GetActivityService)
 	activity.POST("/set", service.SetActivityService)
 	activity.GET("/del/:activityId", service.DelActivityService)
 
