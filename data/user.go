@@ -47,14 +47,14 @@ type AddUserType struct {
 }
 
 type UserDetailType struct {
-	UserId       int64  `db:"user_id" json:"user_id"`
-	Name         string `db:"name" json:"name"`
-	BDate        string `db:"bdate" json:"bdate"`
-	Gender       string `db:"gender" json:"gender"`
-	Gsm          string `db:"gsm" json:"gsm"`
-	Email        string `db:"email" json:"email"`
-	Active       string `db:"active" json:"active"`
-	PatmentModel string `db:"payment_model" json:"payment_model"`
+	UserId       int64        `db:"user_id" json:"user_id"`
+	Name         string       `db:"name" json:"name"`
+	BDate        lib.JSONDate `db:"bdate" json:"bdate"`
+	Gender       string       `db:"gender" json:"gender"`
+	Gsm          string       `db:"gsm" json:"gsm"`
+	Email        string       `db:"email" json:"email"`
+	Active       string       `db:"active" json:"active"`
+	PatmentModel string       `db:"payment_model" json:"payment_model"`
 }
 
 func CreateUser(ud *UserDetailType) (int64, error) {

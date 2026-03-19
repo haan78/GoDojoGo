@@ -2,23 +2,22 @@ package data
 
 import (
 	lib "GoDojoGo/lib"
-	"database/sql"
 	"errors"
 	"fmt"
 )
 
 type ActivityBaseType struct {
-	ActivityId int64          `db:"activity_id" json:"activity_id"`
-	Name       string         `db:"name" json:"name"`
-	Date       string         `db:"date" json:"date"`
-	Start      sql.NullString `db:"start" json:"start"`
-	End        sql.NullString `db:"end" json:"end"`
-	SingleFee  float64        `db:"single_fee" json:"single_fee"`
-	WorkerFee  float64        `db:"worker_fee" json:"worker_fee"`
-	StudentFee float64        `db:"student_fee" json:"student_fee"`
-	Text       sql.NullString `db:"text" json:"text"`
-	Repetitive string         `db:"repetitive" json:"repetitive"`
-	Active     string         `db:"active" json:"active"`
+	ActivityId int64              `db:"activity_id" json:"activity_id"`
+	Name       string             `db:"name" json:"name"`
+	Date       lib.JSONDate       `db:"date" json:"date"`
+	Start      lib.JSONNullString `db:"start" json:"start"`
+	End        lib.JSONNullString `db:"end" json:"end"`
+	SingleFee  float64            `db:"single_fee" json:"single_fee"`
+	WorkerFee  float64            `db:"worker_fee" json:"worker_fee"`
+	StudentFee float64            `db:"student_fee" json:"student_fee"`
+	Text       lib.JSONNullString `db:"text" json:"text"`
+	Repetitive string             `db:"repetitive" json:"repetitive"`
+	Active     string             `db:"active" json:"active"`
 }
 
 func SetActivity(a *ActivityBaseType) (int64, error) {
@@ -84,12 +83,12 @@ func GetActivity(start, end string) ([]ActivityBaseType, error) {
 	if !lib.IsValidDate(start) || !lib.IsValidDate(end) {
 		return nil, fmt.Errorf("start and end must be date format YYYY-MM-DD")
 	}
-
+	result := []ActivityBaseType{}
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := `SELECT name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active FROM activity WHERE activity_date BETWEEN ? AND ?`
-		result, err := lib.GenericQuery[ActivityBaseType](db, cmd, start, end)
+		cmd := `SELECT activity_id, name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active FROM activity WHERE date BETWEEN ? AND ? ORDER BY date ASC`
+		result, err = lib.GenericQuery[ActivityBaseType](db, cmd, start, end)
 		if err == nil {
 			return result, nil
 		} else {

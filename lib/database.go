@@ -123,7 +123,7 @@ func GetInt(db *sqlx.DB, query string, args ...any) (int64, error) {
 }
 
 func GenericQuery[T any](db *sqlx.DB, query string, args ...any) ([]T, error) {
-	var result []T
+	result := []T{}
 	if err := db.Select(&result, query, args...); err != nil {
 		return nil, err
 	}
@@ -143,8 +143,8 @@ func GenericRow[T any](db *sqlx.DB, query string, args ...any) (T, error) {
 	}
 }
 
-func EmptyIsNull(str string) sql.NullString {
-	var value sql.NullString
+func EmptyIsNull(str string) JSONNullString {
+	var value JSONNullString
 
 	if strings.Trim(str, " ") == "" {
 		value.Scan(nil)
