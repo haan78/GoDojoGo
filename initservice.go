@@ -52,11 +52,6 @@ func InitService() *echo.Echo {
 	user.POST("/dan/set", service.SetUserDanService)
 	user.POST("/dan/del", service.DelUserDanService)
 
-	user.GET("/activity/get/:userId", service.GetUserActivitiesService)
-	user.POST("/activity/add", service.AddUserActivityService)
-	user.POST("/activity/del", service.DelUserActivityService)
-	user.POST("/activity/pay", service.UserActivityPaymentService)
-
 	user.POST("/password", service.ChangeUserPasswordService)
 
 	payment := e.Group("/payment", service.GetSecLevel(1))
@@ -71,6 +66,11 @@ func InitService() *echo.Echo {
 	activity.GET("/get/:start/:end", service.GetActivityService)
 	activity.POST("/set", service.SetActivityService)
 	activity.GET("/del/:activityId", service.DelActivityService)
+
+	activity.GET("/listuser/:activityId", service.ListActivityUserService)
+	activity.GET("/posibleusers/:activityId", service.PosibleUsersOfActivityService)
+	activity.GET("/adduser/:userId/:activityId", service.AddActivityUserService)
+	activity.GET("/deluser/:userId/:activityId", service.DelActivityUserService)
 
 	test := e.Group("/test", service.GetSecLevel(0))
 	test.GET("/alive", service.TestJustText)

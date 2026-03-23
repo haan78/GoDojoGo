@@ -81,7 +81,7 @@ func GetString(db *sqlx.DB, query string, args ...any) (string, error) {
 				return "", errors.New("null value")
 			}
 		} else {
-			return "", errors.New("type is not string")
+			return "", errors.New("type is not string2")
 		}
 	} else {
 		return "", err
@@ -115,7 +115,24 @@ func GetInt(db *sqlx.DB, query string, args ...any) (int64, error) {
 				return 0, errors.New("null value")
 			}
 		} else {
-			return 0, errors.New("type is not float")
+			return 0, errors.New("type is not int")
+		}
+	} else {
+		return 0, err
+	}
+}
+
+func GetIntOrZero(db *sqlx.DB, query string, args ...any) (int64, error) {
+	v, err := GetValue(db, query, args...)
+	if err == nil {
+		if vs, ok := v.(sql.NullInt64); ok {
+			if vs.Valid {
+				return vs.Int64, nil
+			} else {
+				return 0, nil
+			}
+		} else {
+			return 0, errors.New("type is not int")
 		}
 	} else {
 		return 0, err

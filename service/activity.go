@@ -49,3 +49,79 @@ func GetActivityService(c *echo.Context) error {
 		return err
 	}
 }
+
+/*
+	activity.GET("/listuser/:activityId", service.ListActivityUserService)
+	activity.GET("/adduser/:userId/:activityId", service.AddActivityUserService)
+	activity.GET("/deluser/:userId/:activityId", service.DelActivityUserService)
+*/
+
+func ListActivityUserService(c *echo.Context) error {
+	activityId, err := strconv.Atoi(c.Param("activityId"))
+	if err == nil {
+		list, err := data.GetUsersOfActivity(int64(activityId))
+		if err == nil {
+			c.JSON(200, list)
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}
+
+func PosibleUsersOfActivityService(c *echo.Context) error {
+	activityId, err := strconv.Atoi(c.Param("activityId"))
+	if err == nil {
+		list, err := data.PosibleUsersOfActivity(int64(activityId))
+		if err == nil {
+			c.JSON(200, list)
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}
+
+func AddActivityUserService(c *echo.Context) error {
+	activityId, err := strconv.Atoi(c.Param("activityId"))
+	if err == nil {
+		userId, err := strconv.Atoi(c.Param("userId"))
+		if err == nil {
+			monetary_id, err := data.MonetaryRecordAddByActivity(int64(activityId), int64(userId))
+			if err == nil {
+				c.JSON(200, monetary_id)
+				return nil
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}
+
+func DelActivityUserService(c *echo.Context) error {
+	activityId, err := strconv.Atoi(c.Param("activityId"))
+	if err == nil {
+		userId, err := strconv.Atoi(c.Param("userId"))
+		if err == nil {
+			err := data.MonetaryRecordDelByActivity(int64(activityId), int64(userId))
+			if err == nil {
+				c.JSON(200, true)
+				return nil
+			} else {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		return err
+	}
+}

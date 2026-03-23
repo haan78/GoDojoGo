@@ -78,3 +78,10 @@ func (d *JSONDate) Parse(sdate string) error {
 	d.Time = parsed
 	return nil
 }
+
+func JSONDateNil() JSONDate {
+	var t time.Time
+	d := JSONDate{}
+	d.Time = t
+	return d
+}
