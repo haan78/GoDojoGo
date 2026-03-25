@@ -2,6 +2,7 @@ package service
 
 import (
 	data "GoDojoGo/data"
+	"strconv"
 
 	"github.com/labstack/echo/v5"
 )
@@ -50,6 +51,21 @@ func ServiceUserAll(c *echo.Context) error {
 	if err == nil {
 		c.JSON(200, list)
 		return nil
+	} else {
+		return err
+	}
+}
+
+func MemberDebtsServices(c *echo.Context) error {
+	userId, err := strconv.Atoi(c.Param("userId"))
+	if err == nil {
+		result, err := data.MemberDebts(int64(userId))
+		if err == nil {
+			c.JSON(200, result)
+			return nil
+		} else {
+			return err
+		}
 	} else {
 		return err
 	}

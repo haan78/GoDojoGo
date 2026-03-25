@@ -91,9 +91,9 @@ func AddActivityUserService(c *echo.Context) error {
 	if err == nil {
 		userId, err := strconv.Atoi(c.Param("userId"))
 		if err == nil {
-			monetary_id, err := data.MonetaryRecordAddByActivity(int64(activityId), int64(userId))
+			mr, err := data.MonetaryRecordAddByActivity(int64(activityId), int64(userId))
 			if err == nil {
-				c.JSON(200, monetary_id)
+				c.JSON(200, mr)
 				return nil
 			} else {
 				return err

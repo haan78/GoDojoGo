@@ -53,10 +53,7 @@ func InitService() *echo.Echo {
 	user.POST("/dan/del", service.DelUserDanService)
 
 	user.POST("/password", service.ChangeUserPasswordService)
-
-	payment := e.Group("/payment", service.GetSecLevel(1))
-	payment.GET("/all", service.PaymentModelGetAllService)
-	payment.POST("/all", service.PaymentModelSetAllService)
+	user.GET("/depts/:userId", service.MemberDebtsServices)
 
 	forgot := e.Group("/forgot", service.GetSecLevel(0))
 	forgot.POST("/", service.ForgotPasswordService)
@@ -66,11 +63,19 @@ func InitService() *echo.Echo {
 	activity.GET("/get/:start/:end", service.GetActivityService)
 	activity.POST("/set", service.SetActivityService)
 	activity.GET("/del/:activityId", service.DelActivityService)
-
 	activity.GET("/listuser/:activityId", service.ListActivityUserService)
 	activity.GET("/posibleusers/:activityId", service.PosibleUsersOfActivityService)
 	activity.GET("/adduser/:userId/:activityId", service.AddActivityUserService)
 	activity.GET("/deluser/:userId/:activityId", service.DelActivityUserService)
+
+	report := e.Group("/report", service.GetSecLevel(1))
+	report.GET("/debts", service.DebtsService)
+	report.GET("/allmonetaryactions", service.AllMonetaryActionsService)
+
+	monetary := e.Group("/monetary", service.GetSecLevel(1))
+	monetary.POST("/expense", service.MonetaryAddExpenseService)
+	monetary.GET("/del/:monetaryId", service.MonetaryDelRecordService)
+	monetary.POST("/sell", service.MonetarySellService)
 
 	test := e.Group("/test", service.GetSecLevel(0))
 	test.GET("/alive", service.TestJustText)

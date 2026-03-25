@@ -209,7 +209,7 @@ func UserAll() ([]UserDetailType, error) {
 func GetUsersOfActivity(activityId int64) ([]UserDetailType, error) {
 	sql := `SELECT u.user_id, u.name, u.bdate, u.gender, u.gsm, u.email, u.active, u.payment_model 
 				FROM user u 
-				INNER JOIN monetary m ON m.user_id = u.user_id
+				INNER JOIN monetary m ON m.user_id = u.user_id AND m.type = 'INCOME'
 					WHERE m.activity_id = ?`
 	db, err := lib.DbConnect()
 	if err == nil {
@@ -228,7 +228,7 @@ func GetUsersOfActivity(activityId int64) ([]UserDetailType, error) {
 func PosibleUsersOfActivity(activityId int64) ([]UserDetailType, error) {
 	sql := `SELECT u.user_id, u.name, u.bdate, u.gender, u.gsm, u.email, u.active, u.payment_model 
 				FROM user u 
-				LEFT JOIN monetary m ON m.user_id = u.user_id AND m.activity_id = ?
+				LEFT JOIN monetary m ON m.user_id = u.user_id AND m.activity_id = ? AND m.type = 'INCOME'
 					WHERE m.monetary_id IS NULL AND u.active = 1`
 	db, err := lib.DbConnect()
 	if err == nil {

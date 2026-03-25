@@ -2,7 +2,6 @@ package data
 
 import (
 	lib "GoDojoGo/lib"
-	"errors"
 	"fmt"
 )
 
@@ -31,8 +30,8 @@ func SetActivity(a *ActivityBaseType) (int64, error) {
 					VALUES (:name, :date, :start, :end, :single_fee, :worker_fee, :student_fee,  :text, :repetitive, :active)`
 		} else {
 			cmd = `UPDATE activity SET 
-				name = :name, date = :date, start = :start, end = :end, text = :text, repetitive = :repetitive, active = :active
-					WHERE activity_id = :activity_id`
+				name = :name, date = :date, start = :start, end = :end, single_fee = :single_fee, worker_fee = :worker_fee, student_fee = :student_fee, 
+				text = :text, repetitive = :repetitive, active = :active WHERE activity_id = :activity_id`
 		}
 
 		result, err := db.NamedExec(cmd, a)
@@ -61,14 +60,14 @@ func DelActivity(activityId int64) error {
 	if err == nil {
 		defer db.Close()
 
-		count, err := lib.GetInt(db, "SELECT COUNT(1) FROM useractivity WHERE payment IS NOT NULL AND activity_id = ?", activityId)
+		count, err := lib.GetInt(db, "SELECT COUNT(1) FROM monetary WHERE activity_id = ? AND m.type = 'INCOME'", activityId)
 		if err != nil {
 			if count == 0 {
 				cmd := `DELETE FROM activity WHERE activity_id = ? AND deletable = 'YES'`
 				_, err := db.Exec(cmd, activityId)
 				return err
 			} else {
-				return errors.New("some user made paymemt this activity")
+				return fmt.Errorf("%v members have been registered", count)
 			}
 		} else {
 			return err

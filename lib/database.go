@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -73,53 +74,42 @@ func GetValue(db *sqlx.DB, query string, args ...any) (any, error) {
 
 func GetString(db *sqlx.DB, query string, args ...any) (string, error) {
 	v, err := GetValue(db, query, args...)
-	if err == nil {
-		if vs, ok := v.(sql.NullString); ok {
-			if vs.Valid {
-				return vs.String, nil
-			} else {
-				return "", errors.New("null value")
-			}
-		} else {
-			return "", errors.New("type is not string2")
-		}
-	} else {
+	if err != nil {
 		return "", err
+	}
+
+	switch val := v.(type) {
+	case string:
+		return val, nil
+	case []byte:
+		return string(val), nil
+	default:
+		return "", fmt.Errorf("unexpected type %T (%v)", v, v)
 	}
 }
 
 func GetFloat(db *sqlx.DB, query string, args ...any) (float64, error) {
-	v, err := GetValue(db, query, args...)
-	if err == nil {
-		if vs, ok := v.(sql.NullFloat64); ok {
-			if vs.Valid {
-				return vs.Float64, nil
-			} else {
-				return 0, errors.New("null value")
-			}
-		} else {
-			return 0, errors.New("type is not float")
-		}
-	} else {
+	var v sql.NullFloat64
+	err := db.Get(&v, query, args...)
+	if err != nil {
 		return 0, err
 	}
+	if !v.Valid {
+		return 0, errors.New("null value")
+	}
+	return v.Float64, nil
 }
 
 func GetInt(db *sqlx.DB, query string, args ...any) (int64, error) {
-	v, err := GetValue(db, query, args...)
-	if err == nil {
-		if vs, ok := v.(sql.NullInt64); ok {
-			if vs.Valid {
-				return vs.Int64, nil
-			} else {
-				return 0, errors.New("null value")
-			}
-		} else {
-			return 0, errors.New("type is not int")
-		}
-	} else {
+	var v sql.NullInt64
+	err := db.Get(&v, query, args...)
+	if err != nil {
 		return 0, err
 	}
+	if !v.Valid {
+		return 0, errors.New("null value")
+	}
+	return v.Int64, nil
 }
 
 func GetIntOrZero(db *sqlx.DB, query string, args ...any) (int64, error) {
