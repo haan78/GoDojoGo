@@ -3,12 +3,13 @@ package data
 import (
 	lib "GoDojoGo/lib"
 	"fmt"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type ActivityBaseType struct {
 	ActivityId int64              `db:"activity_id" json:"activity_id"`
 	Name       string             `db:"name" json:"name"`
-	Date       lib.JSONDate       `db:"date" json:"date"`
 	Start      lib.JSONNullString `db:"start" json:"start"`
 	End        lib.JSONNullString `db:"end" json:"end"`
 	SingleFee  float64            `db:"single_fee" json:"single_fee"`
@@ -17,34 +18,114 @@ type ActivityBaseType struct {
 	Text       lib.JSONNullString `db:"text" json:"text"`
 	Repetitive string             `db:"repetitive" json:"repetitive"`
 	Active     string             `db:"active" json:"active"`
+	WeekDays   lib.JSONNullString `db:"wdays" json:"wdays"`
+	Date       lib.JSONDate       `db:"date" json:"date"`
 }
 
-func SetActivity(a *ActivityBaseType) (int64, error) {
+func paresWeekDays(weekdayStr string) ([]int, error) {
+	seen := make(map[int]bool)
+	var weekdays []int
+	for _, ch := range weekdayStr {
+		day := int(ch - '0')
+		if day < 0 || day > 6 {
+			return nil, fmt.Errorf("invalid weekday: %c", ch)
+		}
+		if !seen[day] {
+			seen[day] = true
+			weekdays = append(weekdays, day)
+		}
+	}
+	return weekdays, nil
+}
 
+func addToCalender(ts *sqlx.Tx, a *ActivityBaseType, liid int64) error {
+	switch a.Repetitive {
+	case "WEEKLY":
+		days, err := lib.NearestWeekdays(a.Date.Time, a.WeekDays.String)
+		if err == nil {
+			str := ""
+			for _, day := range days {
+				if str != "" {
+					str += ","
+				}
+				str += fmt.Sprintf(`('%s',%v)`, day, liid)
+			}
+			_, err := ts.Exec(`INSERT INTO calendar (date, activity_id) VALUES ` + str)
+			if err == nil {
+				ts.Commit()
+				return nil
+			} else {
+				ts.Rollback()
+				return err
+			}
+		} else {
+			ts.Rollback()
+			return err
+		}
+	case "MONTHLY":
+		wdays, err := paresWeekDays(a.WeekDays.String)
+		if err == nil {
+			if len(wdays) == 2 {
+				nday, err := lib.InNextMonth(a.Date.Time, 0, wdays[0], wdays[1])
+				if err == nil {
+					_, err := ts.Exec(`INSERT INTO calendar (date, activity_id) VALUES (?, ?)`, nday, liid)
+					if err == nil {
+						ts.Commit()
+						return nil
+					} else {
+						ts.Rollback()
+						return err
+					}
+				} else {
+					ts.Rollback()
+					return err
+				}
+			} else {
+				ts.Rollback()
+				return fmt.Errorf("weekdays parameter is wrong")
+			}
+		} else {
+			ts.Rollback()
+			return err
+		}
+	default: //if a.Repetitive == "NO"
+		_, err := ts.Exec(`INSERT INTO calendar (date, activity_id) VALUES (?, ?)`, a.Date, liid)
+		if err == nil {
+			ts.Commit()
+			return nil
+		} else {
+			ts.Rollback()
+			return err
+		}
+	}
+}
+
+func ActivityInsert(a *ActivityBaseType) (int64, error) {
+	insSql := `INSERT INTO activity (name, start, end, single_fee, worker_fee, student_fee, text, repetitive, :wdays, active) 
+					VALUES (:name, :start, :end, :single_fee, :worker_fee, :student_fee,  :text, :repetitive, :wdays, :active)`
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		var cmd string
-		if a.ActivityId == 0 {
-			cmd = `INSERT INTO activity (name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active) 
-					VALUES (:name, :date, :start, :end, :single_fee, :worker_fee, :student_fee,  :text, :repetitive, :active)`
-		} else {
-			cmd = `UPDATE activity SET 
-				name = :name, date = :date, start = :start, end = :end, single_fee = :single_fee, worker_fee = :worker_fee, student_fee = :student_fee, 
-				text = :text, repetitive = :repetitive, active = :active WHERE activity_id = :activity_id`
-		}
-
-		result, err := db.NamedExec(cmd, a)
+		ts, err := db.Beginx()
 		if err == nil {
-			if a.ActivityId == 0 {
+			result, err := ts.NamedExec(insSql, a)
+			if err == nil {
 				liid, err := result.LastInsertId()
 				if err == nil {
-					return liid, nil
+					err := addToCalender(ts, a, liid)
+					if err == nil {
+						ts.Commit()
+						return liid, nil
+					} else {
+						ts.Rollback()
+						return 0, err
+					}
 				} else {
+					ts.Rollback()
 					return 0, err
 				}
 			} else {
-				return a.ActivityId, nil
+				return 0, err
 			}
 		} else {
 			return 0, err
@@ -54,21 +135,27 @@ func SetActivity(a *ActivityBaseType) (int64, error) {
 	}
 }
 
-func DelActivity(activityId int64) error {
+func ActivityUpdate(a *ActivityBaseType) error {
+
+	cmd := `UPDATE activity SET 
+				name = :name, 
+				start = :start, 
+				end = :end, 
+				single_fee = :single_fee, 
+				worker_fee = :worker_fee, 
+				student_fee = :student_fee, 
+				text = :text, 
+				repetitive = :repetitive, 
+				wdays = :wdays, 
+				active = :active 
+					WHERE activity_id = :activity_id`
 
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-
-		count, err := lib.GetInt(db, "SELECT COUNT(1) FROM monetary WHERE activity_id = ? AND m.type = 'INCOME'", activityId)
-		if err != nil {
-			if count == 0 {
-				cmd := `DELETE FROM activity WHERE activity_id = ? AND deletable = 'YES'`
-				_, err := db.Exec(cmd, activityId)
-				return err
-			} else {
-				return fmt.Errorf("%v members have been registered", count)
-			}
+		_, err := db.NamedExec(cmd, a)
+		if err == nil {
+			return nil
 		} else {
 			return err
 		}
@@ -77,86 +164,29 @@ func DelActivity(activityId int64) error {
 	}
 }
 
-func GetActivity(start, end string) ([]ActivityBaseType, error) {
+func ActivityList(active string) ([]ActivityBaseType, error) {
 
-	if !lib.IsValidDate(start) || !lib.IsValidDate(end) {
-		return nil, fmt.Errorf("start and end must be date format YYYY-MM-DD")
+	getActive := func(a string) string {
+		switch a {
+		case "":
+			return "a.active"
+		case "ALL":
+			return "a.active"
+		case "NO":
+			return "'NO'"
+		default:
+			return "'YES'"
+		}
 	}
 	result := []ActivityBaseType{}
 	db, err := lib.DbConnect()
 	if err == nil {
 		defer db.Close()
-		cmd := `SELECT activity_id, name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active FROM activity WHERE date BETWEEN ? AND ? ORDER BY date ASC`
-		result, err = lib.GenericQuery[ActivityBaseType](db, cmd, start, end)
+		cmd := `SELECT activity_id, name, start, end, single_fee, worker_fee, student_fee, text, repetitive, wdays, active FROM activity a WHERE a.active = %s`
+		cmd = fmt.Sprintf(cmd, getActive(active))
+		result, err = lib.GenericQuery[ActivityBaseType](db, cmd)
 		if err == nil {
 			return result, nil
-		} else {
-			return nil, err
-		}
-	} else {
-		return nil, err
-	}
-}
-
-func doRepetitiveActivity() ([]ActivityBaseType, error) {
-	selcmd := `SELECT
-	a.name, 
-	IF(a.repetitive = 'WEEKLY',DATE_ADD(a.date, INTERVAL 1 WEEK), DATE_ADD(a.date, INTERVAL 1 MONTH)) as date,
-	a.start, 
-	a.end,
-	a.single_fee,
-	a.worker_fee,
-	a.student_fee,
-	a.text,
-	a.repetitive,
-	a.active
-		FROM activity a
-		LEFT JOIN activity _a ON _a.active = 1 AND _a.repetitive = a.repetitive AND _a.name = a.name AND _a.date > a.date
-			WHERE
-				_a.activity_id IS NULL
-				AND a.active = 1 
-				AND a.repetitive IN ('WEEKLY','MONTHLY') 
-				AND a.date >= IF(a.repetitive = 'WEEKLY',DATE_ADD(CURDATE(), INTERVAL -1 WEEK), DATE_ADD(CURDATE(), INTERVAL -1 MONTH))
-				AND a.date < CURDATE()
-				AND CURDATE() = IF(a.repetitive = 'WEEKLY',DATE_ADD(a.date, INTERVAL 1 WEEK), DATE_ADD(a.date, INTERVAL 1 MONTH))`
-
-	db, err := lib.DbConnect()
-	if err == nil {
-		defer db.Close()
-		result, err := lib.GenericQuery[ActivityBaseType](db, selcmd)
-		if err == nil {
-			values := ""
-			for i := 0; i < len(result); i++ {
-
-				start := "NULL"
-				if result[i].Start.Valid {
-					start = "'" + result[i].Start.String + "'"
-				}
-
-				end := "NULL"
-				if result[i].End.Valid {
-					end = "'" + result[i].End.String + "'"
-				}
-
-				text := "NULL"
-				if result[i].Text.Valid {
-					text = "'" + result[i].Text.String + "'"
-				}
-
-				if i > 0 {
-					values += ","
-				}
-
-				values += fmt.Sprintf(`('%s', '%s', %s, %s, %v, %v, %v, '%s', '%s', %v)`,
-					result[i].Name, result[i].Date, start, end, result[i].SingleFee, result[i].WorkerFee, result[i].StudentFee, text, result[i].Repetitive, result[i].Active)
-			}
-			inscmd := `INSERT INTO activity (name, date, start, end, single_fee, worker_fee, student_fee, text, repetitive, active) VALUES ` + values
-			_, err := db.Exec(inscmd)
-			if err == nil {
-				return result, nil
-			} else {
-				return nil, err
-			}
 		} else {
 			return nil, err
 		}

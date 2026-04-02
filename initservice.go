@@ -60,21 +60,22 @@ func InitService() *echo.Echo {
 	forgot.GET("/:guid", service.ForgotPasswordSetService)
 
 	activity := e.Group("/activity", service.GetSecLevel(1))
-	activity.GET("/get/:start/:end", service.GetActivityService)
-	activity.POST("/set", service.SetActivityService)
-	activity.GET("/del/:activityId", service.DelActivityService)
-	activity.GET("/listuser/:activityId", service.ListActivityUserService)
-	activity.GET("/posibleusers/:activityId", service.PosibleUsersOfActivityService)
-	activity.GET("/adduser/:userId/:activityId", service.AddActivityUserService)
-	activity.GET("/deluser/:userId/:activityId", service.DelActivityUserService)
+	activity.GET("/list/:active", service.ActivityListService)
+	activity.POST("/insert", service.ActivityInsertService)
+	activity.POST("/update", service.ActivityUpdateService)
+
+	calendar := e.Group("/calendar", service.GetSecLevel(1))
+	calendar.GET("/list/:active/begin/end", service.CalendarListService)
+	calendar.GET("/del/:date/:activityId", service.CalendarDelService)
+	calendar.GET("/member/:calendarId/:userId", service.CalendarAddRemoveMemeberService)
+	calendar.GET("/members/:calendarId", service.CalendarMembersService)
 
 	report := e.Group("/report", service.GetSecLevel(1))
-	report.GET("/debts", service.DebtsService)
-	report.GET("/allmonetaryactions", service.AllMonetaryActionsService)
+	report.GET("/debts/:active", service.DebtsService)
+	report.GET("/allmonetaryactions/:start/:end", service.AllMonetaryActionsService)
 
 	monetary := e.Group("/monetary", service.GetSecLevel(1))
 	monetary.POST("/expense", service.MonetaryAddExpenseService)
-	monetary.GET("/del/:monetaryId", service.MonetaryDelRecordService)
 	monetary.POST("/sell", service.MonetarySellService)
 
 	test := e.Group("/test", service.GetSecLevel(0))

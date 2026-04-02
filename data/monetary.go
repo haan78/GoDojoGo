@@ -2,7 +2,6 @@ package data
 
 import (
 	"GoDojoGo/lib"
-	"fmt"
 )
 
 type MonetaryRecord struct {
@@ -21,80 +20,6 @@ type ExpenseType struct {
 	ActivityId lib.JSONInt  `json:"activity_id" db:"activity_id"`
 	UserId     lib.JSONInt  `json:"user_id" db:"user_id"`
 	Text       string       `json:"text" db:"text"`
-}
-
-func MonetaryRecordDel(MonetaryId int64) error {
-	db, err := lib.DbConnect()
-	if err == nil {
-		_, err := db.Exec(`DELETE FROM monetary WHERE monetary_id = ?`, MonetaryId)
-		return err
-	} else {
-		return err
-	}
-}
-
-func MonetaryRecordAddByActivity(activityId, userId int64) (MonetaryRecord, error) {
-	var mr MonetaryRecord = MonetaryRecord{}
-	db, err := lib.DbConnect()
-	if err == nil {
-		pm, err := lib.GetString(db, `SELECT payment_model FROM user WHERE user_id = ?`, userId)
-		if err == nil {
-			fn := ""
-			var fee float64 = 0
-			if pm == "STUDENT" {
-				fn = "student_fee"
-			} else if pm == "WORKER" {
-				fn = "worker_fee"
-			} else if pm == "SINGLE" {
-				fn = "single_fee"
-			} else if pm != "FREE" {
-				return mr, fmt.Errorf("unknown payment model (%s)", pm)
-			}
-			if fn != "" {
-				f, err := lib.GetFloat(db, fmt.Sprintf("SELECT %s FROM activity WHERE activity_id = ?", fn), activityId)
-				if err == nil {
-					fee = f
-				} else {
-					return mr, err
-				}
-			}
-
-			mr.ActivityId = lib.JSONIntGet(activityId)
-			mr.Date = lib.JSONDateNil()
-			mr.Fee = fee
-			mr.MonetaryId = 0
-			mr.Payment = lib.JSONFloatNil()
-			mr.UserId = lib.JSONIntGet(userId)
-			mr.Payment.Valid = false
-
-			c, err := lib.GetInt(db, `SELECT COUNT(1) FROM monetary WHERE user_id = ? AND activity_id = ?`, userId, activityId)
-			if err == nil {
-				if c == 0 {
-					result, err := db.NamedExec(`INSERT INTO monetary (user_id, activity_id, fee, payment, date, type) VALUES (:user_id, :activity_id, :fee, :payment, :date, 'INCOME')`, mr)
-					if err == nil {
-						liid, err := result.LastInsertId()
-						if err == nil {
-							mr.MonetaryId = liid
-							return mr, nil
-						} else {
-							return mr, err
-						}
-					} else {
-						return mr, err
-					}
-				} else {
-					return mr, fmt.Errorf("member already registred on this activity")
-				}
-			} else {
-				return mr, err
-			}
-
-		} else {
-			return mr, err
-		}
-	} else {
-		return mr, err
-	}
 }
 
 type SellType struct {
@@ -125,7 +50,7 @@ func Sell(s SellType) (int64, error) {
 func MonetaryRecordDelByActivity(activitiyId, userId int64) error {
 	db, err := lib.DbConnect()
 	if err == nil {
-		_, err := db.Exec(`DELETE FROM monetary WHERE user_id = ? AND activity_id = ? AND m.type = 'INCOME'`, userId, activitiyId)
+		_, err := db.Exec(`DELETE FROM monetary WHERE user_id = ? AND activity_id = ? AND payment IS NULL AND type = 'INCOME'`, userId, activitiyId)
 		return err
 	} else {
 		return err

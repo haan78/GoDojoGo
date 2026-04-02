@@ -100,9 +100,9 @@ func GetFloat(db *sqlx.DB, query string, args ...any) (float64, error) {
 	return v.Float64, nil
 }
 
-func GetInt(db *sqlx.DB, query string, args ...any) (int64, error) {
+func GetInt(db sqlx.Ext, query string, args ...any) (int64, error) {
 	var v sql.NullInt64
-	err := db.Get(&v, query, args...)
+	err := sqlx.Get(db, &v, query, args...)
 	if err != nil {
 		return 0, err
 	}

@@ -20,6 +20,7 @@ func main() {
 	if len(args) > 0 {
 		switch args[0] {
 		case "version":
+			fmt.Println(globals.VERSION)
 			return
 		case "noworker":
 			runWorker = false
@@ -32,6 +33,9 @@ func main() {
 			} else {
 				fmt.Println(err.Error())
 			}
+			return
+		case "weeklyupdate":
+			//data.DoWeeklRepetitiveyActivity()
 			return
 		}
 	}

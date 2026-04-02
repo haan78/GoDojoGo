@@ -18,8 +18,8 @@ func DebtsService(c *echo.Context) error {
 }
 
 func AllMonetaryActionsService(c *echo.Context) error {
-	start := c.Param("active")
-	end := c.Param("active")
+	start := c.Param("start")
+	end := c.Param("end")
 	result, err := data.AllMonetaryActions(start, end)
 	if err == nil {
 		c.JSON(200, result)
